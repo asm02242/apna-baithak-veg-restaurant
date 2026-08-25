@@ -131,13 +131,13 @@ export default function AdminBulkOrders() {
                       <select
                         value={order.status}
                         onChange={(e) => alert(`Status updated to: ${e.target.value} (backend integration needed)`)}
-                        className={`rounded-full px-2 py-1 text-xs font-bold ${({
-                          new: 'bg-[#ea580c]/20 text-[#ea580c]',
-                          quoted: 'bg-[#f59e0b]/20 text-[#f59e0b]',
-                          confirmed: 'bg-[#16a34a]/20 text-[#16a34a]',
-                          completed: 'bg-[#16a34a]/20 text-[#16a34a]',
-                          cancelled: 'bg-red-500/20 text-red-600',
-                        }[order.status]}`}
+className={`rounded-full px-2 py-1 text-xs font-bold ${({
+                        new: 'bg-[#ea580c]/20 text-[#ea580c]',
+                        quoted: 'bg-[#f59e0b]/20 text-[#f59e0b]',
+                        confirmed: 'bg-[#16a34a]/20 text-[#16a34a]',
+                        completed: 'bg-[#16a34a]/20 text-[#16a34a]',
+                        cancelled: 'bg-red-500/20 text-red-600',
+                      })[order.status]}`}
                       >
                         <option value="new">New</option>
                         <option value="quoted">Quoted</option>
