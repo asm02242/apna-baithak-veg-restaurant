@@ -1,0 +1,160 @@
+import fs from 'fs';
+import path from 'path';
+
+const STORAGE_DIR = path.join(process.cwd(), 'data', 'storage');
+
+function ensureStorageDir() {
+  if (!fs.existsSync(STORAGE_DIR)) {
+    fs.mkdirSync(STORAGE_DIR, { recursive: true });
+  }
+}
+
+function readJSON<T>(filename: string, defaultValue: T): T {
+  ensureStorageDir();
+  const filepath = path.join(STORAGE_DIR, filename);
+  try {
+    if (fs.existsSync(filepath)) {
+      const data = fs.readFileSync(filepath, 'utf-8');
+      return JSON.parse(data);
+    }
+  } catch {}
+  return defaultValue;
+}
+
+function writeJSON(filename: string, data: unknown) {
+  ensureStorageDir();
+  const filepath = path.join(STORAGE_DIR, filename);
+  fs.writeFileSync(filepath, JSON.stringify(data, null, 2));
+}
+
+export interface AdminUser {
+  id: string;
+  username: string;
+  password: string; // hashed in production
+  role: 'admin';
+  createdAt: string;
+}
+
+export interface CustomerUser {
+  id: string;
+  username: string;
+  password: string;
+  name: string;
+  phone: string;
+  addresses: Address[];
+  wishlist: string[];
+  favourites: string[];
+  createdAt: string;
+}
+
+export interface Address {
+  id: string;
+  label: string;
+  full: string;
+  phone: string;
+}
+
+export interface MenuItem {
+  id: string;
+  name: string;
+  category: string;
+  categoryId: string;
+  price: number;
+  half?: number;
+  full?: number;
+  rating: number;
+  bestSeller?: boolean;
+  veg: boolean;
+  image?: string;
+  description?: string;
+}
+
+export interface MenuCategory {
+  id: string;
+  name: string;
+  icon: string;
+  items: MenuItem[];
+}
+
+export interface Offer {
+  id: string;
+  label: string;
+  type: 'flat' | 'freeItem' | 'bulk';
+  minOrder: number;
+  value: number;
+  freeItemValue?: number;
+  desc: string;
+  priority: number;
+  active: boolean;
+}
+
+export interface NewsItem {
+  id: string;
+  title: string;
+  content: string;
+  image?: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Order {
+  id: string;
+  userId?: string;
+  items: { id: string; name: string; price: number; quantity: number }[];
+  subtotal: number;
+  discount: number;
+  deliveryFee: number;
+  handlingFee: number;
+  smallCartFee: number;
+  tip: number;
+  grandTotal: number;
+  deliveryType: 'delivery' | 'takeaway' | 'dinein';
+  address: string;
+  phone: string;
+  name: string;
+  slot: string;
+  payment: 'cod' | 'razorpay';
+  status: 'pending' | 'confirmed' | 'preparing' | 'delivered' | 'cancelled';
+  createdAt: string;
+  offerApplied?: { id: string; label: string; discount: number; freeItemValue?: number };
+}
+
+const DEFAULT_ADMINS: AdminUser[] = [
+  { id: 'admin-1', username: 'asm2242', password: 'asm.2242', role: 'admin', createdAt: new Date().toISOString() },
+];
+
+const DEFAULT_OFFERS: Offer[] = [
+  { id: 'flat75', label: '₹75 OFF', type: 'flat', minOrder: 499, value: 75, desc: '₹75 off on orders above ₹499', priority: 1, active: true },
+  { id: 'flat150', label: '₹150 OFF', type: 'flat', minOrder: 999, value: 150, desc: '₹150 off on orders above ₹999', priority: 2, active: true },
+  { id: 'freeItem200', label: 'FREE ITEM ₹200', type: 'freeItem', minOrder: 1500, value: 200, freeItemValue: 200, desc: 'Order ₹1500+ and get any item worth ₹200 free', priority: 3, active: true },
+  { id: 'freeItem250', label: 'FREE ITEM ₹250', type: 'freeItem', minOrder: 2000, value: 250, freeItemValue: 250, desc: 'Order ₹2000+ and get any item worth ₹250 free', priority: 4, active: true },
+  { id: 'bulkOffer', label: 'BULK OFFER', type: 'bulk', minOrder: 3000, value: 0, desc: 'Special bulk order pricing - contact us for custom quote', priority: 5, active: true },
+];
+
+export const storage = {
+  getAdmins: () => readJSON<AdminUser[]>('admins.json', DEFAULT_ADMINS),
+  saveAdmins: (admins: AdminUser[]) => writeJSON('admins.json', admins),
+
+  getOffers: () => readJSON<Offer[]>('offers.json', DEFAULT_OFFERS),
+  saveOffers: (offers: Offer[]) => writeJSON('offers.json', offers),
+
+  getNews: () => readJSON<NewsItem[]>('news.json', []),
+  saveNews: (news: NewsItem[]) => writeJSON('news.json', news),
+
+  getOrders: () => readJSON<Order[]>('orders.json', []),
+  saveOrders: (orders: Order[]) => writeJSON('orders.json', orders),
+
+  getCustomers: () => readJSON<CustomerUser[]>('customers.json', []),
+  saveCustomers: (customers: CustomerUser[]) => writeJSON('customers.json', customers),
+
+  getMenu: () => {
+    const menuData = readJSON<{ categories: MenuCategory[] }>('menu.json', { categories: [] });
+    return menuData.categories;
+  },
+  saveMenu: (categories: MenuCategory[]) => writeJSON('menu.json', { categories }),
+};
+
+export function getNextId(prefix: string = 'id') {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
