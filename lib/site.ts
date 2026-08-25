@@ -3,9 +3,9 @@ export const SITE = {
   tagline: "Pure Veg. • Fresh Taste • Apna Baithak",
   description:
     "Apna Baithak — Pure Vegetarian Restaurant serving North Indian, Chinese, Chaap, Momos, Rolls, Main Course, Burgers & Beverages. Family-friendly, freshly prepared, Eldeco City, Lucknow.",
-  phone: "8299751213",
-  phoneDisplay: "+91 8299751213",
-  whatsapp: "8299751213", // without +91 for wa.me link
+  phone: "9454999442",
+  phoneDisplay: "+91 9454999442",
+  whatsapp: "9454999442", // without +91 for wa.me link
   email: "contact@apnabaithak.example", // placeholder - replace with real email
   address: "Eldeco City, Lucknow", // short placeholder - replace with full address
   fullAddress: "Apna Baithak Vegetarian Restaurant, Eldeco City, Lucknow, Uttar Pradesh", // placeholder
