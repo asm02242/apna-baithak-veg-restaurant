@@ -12,21 +12,67 @@ export type CartItem = {
 
 export type DeliveryType = "delivery" | "takeaway" | "dinein";
 
-export type CouponDef = {
-  code: string;
+export type OfferType = "flat" | "freeItem" | "bulk";
+
+export type OfferDef = {
+  id: string;
   label: string;
-  type: "flat" | "percent";
-  value: number;
-  maxDiscount?: number;
+  type: OfferType;
   minOrder: number;
+  value: number;
+  freeItemValue?: number;
   desc: string;
+  priority: number;
 };
 
-export const AVAILABLE_COUPONS: CouponDef[] = [
-  { code: "BAITHAK10", label: "10% OFF", type: "percent", value: 10, maxDiscount: 80, minOrder: 199, desc: "10% off up to ₹80 on orders above ₹199" },
-  { code: "WELCOME50", label: "₹50 OFF", type: "flat", value: 50, minOrder: 249, desc: "Flat ₹50 off on orders above ₹249" },
-  { code: "FREESHIP", label: "FREE DELIVERY", type: "flat", value: 0, minOrder: 149, desc: "Free delivery — save ₹40" },
-  { code: "CHAAP20", label: "₹20 OFF", type: "flat", value: 20, minOrder: 99, desc: "Flat ₹20 off on orders above ₹99" },
+export const AVAILABLE_OFFERS: OfferDef[] = [
+  { 
+    id: "flat75", 
+    label: "₹75 OFF", 
+    type: "flat", 
+    minOrder: 499, 
+    value: 75, 
+    desc: "₹75 off on orders above ₹499", 
+    priority: 1 
+  },
+  { 
+    id: "flat150", 
+    label: "₹150 OFF", 
+    type: "flat", 
+    minOrder: 999, 
+    value: 150, 
+    desc: "₹150 off on orders above ₹999", 
+    priority: 2 
+  },
+  { 
+    id: "freeItem200", 
+    label: "FREE ITEM ₹200", 
+    type: "freeItem", 
+    minOrder: 1500, 
+    value: 200, 
+    freeItemValue: 200,
+    desc: "Order ₹1500+ and get any item worth ₹200 free", 
+    priority: 3 
+  },
+  { 
+    id: "freeItem250", 
+    label: "FREE ITEM ₹250", 
+    type: "freeItem", 
+    minOrder: 2000, 
+    value: 250, 
+    freeItemValue: 250,
+    desc: "Order ₹2000+ and get any item worth ₹250 free", 
+    priority: 4 
+  },
+  { 
+    id: "bulkOffer", 
+    label: "BULK OFFER", 
+    type: "bulk", 
+    minOrder: 3000, 
+    value: 0, 
+    desc: "Special bulk order pricing - contact us for custom quote", 
+    priority: 5 
+  },
 ];
 
 export const FREE_DELIVERY_THRESHOLD = 399;
@@ -34,6 +80,15 @@ export const BASE_DELIVERY_FEE = 40;
 export const HANDLING_FEE = 5;
 export const SMALL_CART_FEE = 30;
 export const SMALL_CART_THRESHOLD = 149;
+
+export type SelectedOffer = {
+  id: string;
+  label: string;
+  type: OfferType;
+  discount: number;
+  freeItemValue?: number;
+  desc: string;
+} | null;
 
 export type CartBill = {
   subtotal: number;
@@ -47,6 +102,8 @@ export type CartBill = {
   freeDeliveryProgress: number;
   freeDeliveryRemaining: number;
   isFreeDelivery: boolean;
+  appliedOffer: SelectedOffer;
+  eligibleOffers: OfferDef[];
 };
 
 type CartContextType = {
@@ -60,11 +117,9 @@ type CartContextType = {
   tip: number;
   deliveryType: DeliveryType;
   setDeliveryType: (t: DeliveryType) => void;
-  couponCode: string | null;
-  couponError: string | null;
-  applyCoupon: (code: string) => boolean;
-  removeCoupon: () => void;
-  appliedCoupon: CouponDef | null;
+  selectedOffer: SelectedOffer;
+  setSelectedOffer: (offer: SelectedOffer) => void;
+  eligibleOffers: OfferDef[];
   total: number;
   subtotal: number;
   count: number;
@@ -76,16 +131,13 @@ type CartContextType = {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-function calcDiscount(coupon: CouponDef | null, subtotal: number): number {
-  if (!coupon) return 0;
-  if (subtotal < coupon.minOrder) return 0;
-  if (coupon.code === "FREESHIP") return 0;
-  if (coupon.type === "flat") return Math.min(coupon.value, subtotal);
-  if (coupon.type === "percent") {
-    const v = Math.floor((subtotal * coupon.value) / 100);
-    return coupon.maxDiscount ? Math.min(v, coupon.maxDiscount) : v;
-  }
-  return 0;
+function calcOfferDiscount(offer: OfferDef | null, subtotal: number): { discount: number; freeItemValue?: number } {
+  if (!offer) return { discount: 0 };
+  if (subtotal < offer.minOrder) return { discount: 0 };
+  if (offer.type === "flat") return { discount: Math.min(offer.value, subtotal) };
+  if (offer.type === "freeItem") return { discount: 0, freeItemValue: offer.freeItemValue };
+  if (offer.type === "bulk") return { discount: 0 };
+  return { discount: 0 };
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -93,8 +145,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [tip, setTip] = useState(0);
   const [deliveryType, setDeliveryType] = useState<DeliveryType>("delivery");
-  const [couponCode, setCouponCode] = useState<string | null>(null);
-  const [couponError, setCouponError] = useState<string | null>(null);
+  const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null);
 
   // hydration
   useEffect(() => {
@@ -105,8 +156,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (savedTip) setTip(Number(savedTip) || 0);
       const savedDel = localStorage.getItem("apna-baithak-delivery") as DeliveryType | null;
       if (savedDel) setDeliveryType(savedDel);
-      const savedCoupon = localStorage.getItem("apna-baithak-coupon");
-      if (savedCoupon) setCouponCode(savedCoupon);
+      const savedOffer = localStorage.getItem("apna-baithak-offer");
+      if (savedOffer) setSelectedOfferId(savedOffer);
     } catch {}
   }, []);
 
@@ -127,10 +178,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [deliveryType]);
   useEffect(() => {
     try {
-      if (couponCode) localStorage.setItem("apna-baithak-coupon", couponCode);
-      else localStorage.removeItem("apna-baithak-coupon");
+      if (selectedOfferId) localStorage.setItem("apna-baithak-offer", selectedOfferId);
+      else localStorage.removeItem("apna-baithak-offer");
     } catch {}
-  }, [couponCode]);
+  }, [selectedOfferId]);
 
   const addToCart = (item: Omit<CartItem, "quantity">) => {
     setCart((prev) => {
@@ -140,7 +191,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { ...item, quantity: 1 }];
     });
-    // do not auto-open cart - user requested Add should not show cart
   };
 
   const removeFromCart = (id: string) => setCart((prev) => prev.filter((p) => p.id !== id));
@@ -156,29 +206,48 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = () => {
     setCart([]);
     setTip(0);
-    setCouponCode(null);
-    setCouponError(null);
+    setSelectedOfferId(null);
     try {
       localStorage.removeItem("apna-baithak-cart");
       localStorage.removeItem("apna-baithak-tip");
-      localStorage.removeItem("apna-baithak-coupon");
+      localStorage.removeItem("apna-baithak-offer");
     } catch {}
   };
-
-  const appliedCoupon = useMemo(() => {
-    if (!couponCode) return null;
-    return AVAILABLE_COUPONS.find((c) => c.code === couponCode) ?? null;
-  }, [couponCode]);
 
   const subtotal = useMemo(() => cart.reduce((sum, i) => sum + i.price * i.quantity, 0), [cart]);
   const count = useMemo(() => cart.reduce((sum, i) => sum + i.quantity, 0), [cart]);
 
-  const discount = useMemo(() => calcDiscount(appliedCoupon, subtotal), [appliedCoupon, subtotal]);
+  const selectedOffer = useMemo(() => {
+    if (!selectedOfferId) return null;
+    const offer = AVAILABLE_OFFERS.find((o) => o.id === selectedOfferId);
+    if (!offer) return null;
+    const { discount, freeItemValue } = calcOfferDiscount(offer, subtotal);
+    if (discount === 0 && !offer.freeItemValue) return null;
+    return {
+      id: offer.id,
+      label: offer.label,
+      type: offer.type,
+      discount,
+      freeItemValue: offer.freeItemValue,
+      desc: offer.desc,
+    };
+  }, [selectedOfferId, subtotal]);
+
+  const eligibleOffers = useMemo(() => {
+    return AVAILABLE_OFFERS.filter((o) => subtotal >= o.minOrder);
+  }, [subtotal]);
+
+  const { discount, freeItemValue } = useMemo(() => {
+    if (!selectedOffer) return { discount: 0, freeItemValue: undefined };
+    return calcOfferDiscount(
+      AVAILABLE_OFFERS.find((o) => o.id === selectedOffer.id) || null, 
+      subtotal
+    );
+  }, [selectedOffer, subtotal]);
 
   const bill: CartBill = useMemo(() => {
     const isFreeByThreshold = subtotal >= FREE_DELIVERY_THRESHOLD;
-    const isFreeByCoupon = appliedCoupon?.code === "FREESHIP" && subtotal >= (appliedCoupon?.minOrder ?? 0);
-    const isFreeDelivery = deliveryType !== "delivery" ? true : isFreeByThreshold || isFreeByCoupon;
+    const isFreeDelivery = deliveryType !== "delivery" ? true : isFreeByThreshold;
     let deliveryFee = 0;
     if (deliveryType === "delivery") {
       if (isFreeDelivery) deliveryFee = 0;
@@ -190,9 +259,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const smallCartFee = deliveryType === "delivery" && subtotal > 0 && subtotal < SMALL_CART_THRESHOLD ? SMALL_CART_FEE : 0;
     const grandTotal = Math.max(0, subtotal - discount + deliveryFee + handlingFee + smallCartFee + tip);
     const savedDelivery = deliveryType === "delivery" && isFreeDelivery && subtotal > 0 ? BASE_DELIVERY_FEE : 0;
-    const savings = discount + savedDelivery;
+    const savings = discount + savedDelivery + (selectedOffer?.freeItemValue || 0);
     const progress = Math.min(100, Math.round((subtotal / FREE_DELIVERY_THRESHOLD) * 100));
     const remaining = Math.max(0, FREE_DELIVERY_THRESHOLD - subtotal);
+    
+    const eligible = AVAILABLE_OFFERS.filter((o) => subtotal >= o.minOrder);
+    
     return {
       subtotal,
       discount,
@@ -205,37 +277,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
       freeDeliveryProgress: progress,
       freeDeliveryRemaining: remaining,
       isFreeDelivery,
+      appliedOffer: selectedOffer,
+      eligibleOffers: eligible,
     };
-  }, [subtotal, discount, tip, cart.length, deliveryType, appliedCoupon]);
+  }, [subtotal, discount, tip, cart.length, deliveryType, selectedOffer]);
 
   const total = bill.grandTotal;
 
-  const applyCoupon = (code: string) => {
-    const upper = code.trim().toUpperCase();
-    if (!upper) {
-      setCouponError("Enter coupon code");
-      return false;
+  const setSelectedOffer = (offer: { id: string; label: string; type: OfferType; discount: number; freeItemValue?: number; desc: string } | null) => {
+    if (!offer) {
+      setSelectedOfferId(null);
+      return;
     }
-    const found = AVAILABLE_COUPONS.find((c) => c.code === upper);
-    if (!found) {
-      setCouponError("Invalid coupon");
-      return false;
+    // Check if subtotal qualifies for this offer
+    const offerDef = AVAILABLE_OFFERS.find((o) => o.id === offer.id);
+    if (offerDef && subtotal >= offerDef.minOrder) {
+      setSelectedOfferId(offer.id);
     }
-    if (subtotal < found.minOrder) {
-      setCouponError(`Add ₹${found.minOrder - subtotal} more to use this coupon`);
-      return false;
-    }
-    if (cart.length === 0) {
-      setCouponError("Cart is empty");
-      return false;
-    }
-    setCouponCode(found.code);
-    setCouponError(null);
-    return true;
-  };
-  const removeCoupon = () => {
-    setCouponCode(null);
-    setCouponError(null);
   };
 
   const openCart = () => setIsCartOpen(true);
@@ -254,11 +312,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setTip,
         deliveryType,
         setDeliveryType,
-        couponCode,
-        couponError,
-        applyCoupon,
-        removeCoupon,
-        appliedCoupon,
+        selectedOffer,
+        setSelectedOffer,
+        eligibleOffers,
         total,
         subtotal,
         count,

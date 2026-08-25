@@ -10,6 +10,7 @@ export type MenuItem = {
   bestSeller?: boolean;
   veg: boolean;
   image?: string;
+  description?: string;
 };
 
 export type MenuCategory = {
@@ -27,6 +28,48 @@ function item(name: string, catId: string, catName: string, price: number, opts:
 }
 
 export const menuCategories: MenuCategory[] = [
+  {
+    id: "thali",
+    name: "Thali",
+    icon: "🍽️",
+    items: [
+      item("Thali", "thali", "Thali", 199, { 
+        rating: 4.7, 
+        bestSeller: true, 
+        image: "/images/foods/thali.jpg",
+        description: "4 Roti + Mix Veg + Daal + Gravy Sabji + Jeera Rice + Salad"
+      }),
+      item("Special Thali", "thali", "Thali", 299, { 
+        rating: 4.8, 
+        bestSeller: true, 
+        image: "/images/foods/special-thali.jpg",
+        description: "Paneer Sabji/Mushroom + Daal Fry/Daal Makhni + 2 Butter Roti + 1 Laccha Paratha + Salad + Raita + Rasgulla"
+      }),
+    ],
+  },
+  {
+    id: "combos",
+    name: "Combos",
+    icon: "🍱",
+    items: [
+      item("Mini Combo", "combos", "Combos", 149, { 
+        rating: 4.5, 
+        image: "/images/foods/mini-combo.jpg",
+        description: "1 Main Dish + 2 Roti + Rice + Salad"
+      }),
+      item("Family Combo", "combos", "Combos", 399, { 
+        rating: 4.7, 
+        bestSeller: true, 
+        image: "/images/foods/family-combo.jpg",
+        description: "2 Main Dishes + 4 Roti + Rice + Dal + Salad + Raita"
+      }),
+      item("Party Combo", "combos", "Combos", 599, { 
+        rating: 4.8, 
+        image: "/images/foods/party-combo.jpg",
+        description: "3 Main Dishes + 6 Roti + 2 Rice + Dal + 2 Salad + Raita + Sweet"
+      }),
+    ],
+  },
   {
     id: "chinese",
     name: "Chinese Food",

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { useCart, AVAILABLE_COUPONS, FREE_DELIVERY_THRESHOLD } from "../context/CartContext";
+import { useCart, AVAILABLE_OFFERS, FREE_DELIVERY_THRESHOLD } from "../context/CartContext";
 import { SITE } from "@/lib/site";
 import { bestSellers } from "@/data/menu";
 
@@ -19,26 +19,19 @@ export default function CartDrawer() {
     removeFromCart,
     clearCart,
     addToCart,
-    couponCode,
-    appliedCoupon,
-    couponError,
-    applyCoupon,
-    removeCoupon,
+    selectedOffer,
+    setSelectedOffer,
+    eligibleOffers,
     tip,
     setTip,
     deliveryType,
   } = useCart();
-  const [couponInput, setCouponInput] = useState("");
   const [showBill, setShowBill] = useState(true);
 
   if (!isCartOpen) return null;
 
   const progress = bill.freeDeliveryProgress;
   const remaining = bill.freeDeliveryRemaining;
-
-  const handleApply = () => {
-    if (applyCoupon(couponInput)) setCouponInput("");
-  };
 
   return (
     <div className="fixed inset-0 z-50">
@@ -166,50 +159,41 @@ export default function CartDrawer() {
                 </Link>
               </div>
 
-              {/* Coupon - Blinkit style dashed */}
+              {/* Offers - choose only ONE */}
               <div className="rounded-xl bg-white p-2 ring-1 ring-black/5 shadow-sm">
                 <div className="flex items-center gap-2">
-                  <span className="grid h-8 w-8 place-items-center rounded-full bg-[#fef3c7] text-xs">🏷️</span>
+                  <span className="grid h-8 w-8 place-items-center rounded-full bg-[#fef3c7] text-xs">🎁</span>
                   <div className="flex-1">
-                    <div className="text-[10px] font-black">Apply Coupon</div>
-                    <div className="text-[10px] text-black/60">{appliedCoupon ? `${appliedCoupon.code} applied • ${appliedCoupon.desc}` : "Save more with coupons"}</div>
+                    <div className="text-[10px] font-black">Choose one offer</div>
+                    <div className="text-[10px] text-black/60">{selectedOffer ? `${selectedOffer.label} applied` : "Select an offer below"}</div>
                   </div>
-                  {appliedCoupon ? (
-                    <button onClick={removeCoupon} className="rounded-full bg-black px-3 py-1.5 text-[10px] font-bold text-white">Remove</button>
-                  ) : (
-                    <button onClick={() => setShowBill((v) => !v)} className="text-[10px] font-bold text-[#ea580c]">View</button>
+                  {selectedOffer && (
+                    <button onClick={() => setSelectedOffer(null)} className="rounded-full bg-black px-3 py-1.5 text-[10px] font-bold text-white">Remove</button>
                   )}
                 </div>
-                {!appliedCoupon && (
-                  <div className="mt-2 flex gap-2">
-                    <input
-                      value={couponInput}
-                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                      placeholder="Try BAITHAK10 or WELCOME50"
-                      className="flex-1 rounded-xl border px-3 py-2 text-[10px] font-bold outline-none focus:ring-2 focus:ring-[#ea580c]/20 uppercase"
-                    />
-                    <button onClick={handleApply} className="rounded-xl bg-[#ea580c] px-4 py-2 text-[10px] font-black text-white hover:bg-[#c2410c]">Apply</button>
-                  </div>
-                )}
-                {couponError && <div className="mt-1 text-[10px] font-bold text-red-600">{couponError}</div>}
-                {!appliedCoupon && (
-                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-                    {AVAILABLE_COUPONS.slice(0, 3).map((c) => (
+                {eligibleOffers.length > 0 ? (
+                  <div className="mt-2 grid gap-1.5">
+                    {eligibleOffers.map((o) => (
                       <button
-                        key={c.code}
-                        onClick={() => {
-                          setCouponInput(c.code);
-                          applyCoupon(c.code);
-                        }}
-                        className="shrink-0 rounded-xl border border-dashed border-[#ea580c]/30 bg-[#fff7ed] px-3 py-2 text-left"
+                        key={o.id}
+                        onClick={() => setSelectedOffer(selectedOffer?.id === o.id ? null : { id: o.id, label: o.label, type: o.type, discount: o.value, freeItemValue: o.freeItemValue, desc: o.desc })}
+                        className={`text-left rounded-lg border-2 px-2.5 py-1.5 transition ${selectedOffer?.id === o.id ? "border-[#ea580c] bg-[#fff7ed]" : "border-transparent bg-[#f7f7f7]"}`}
                       >
-                        <div className="text-[10px] font-black text-[#ea580c]">{c.code}</div>
-                        <div className="text-[10px] text-black/60 max-w-[140px] leading-tight">{c.desc}</div>
+                        <div className="flex items-center gap-2">
+                          <span className={`grid h-3.5 w-3.5 place-items-center rounded-full border text-[8px] ${selectedOffer?.id === o.id ? "border-[#ea580c] bg-[#ea580c] text-white" : "border-black/20"}`}>{selectedOffer?.id === o.id ? "✓" : ""}</span>
+                          <span className="text-[10px] font-black">{o.label}</span>
+                          {o.type === "bulk" && <span className="ml-auto text-[9px] font-bold bg-[#16a34a] text-white px-1.5 py-0.5 rounded-full">Bulk</span>}
+                        </div>
+                        <div className="text-[9px] text-black/50 mt-0.5 ml-5">{o.desc}</div>
                       </button>
                     ))}
                   </div>
+                ) : (
+                  <div className="mt-2 rounded-lg bg-[#f7f7f7] px-2.5 py-2 text-[10px]">
+                    Next offer at ₹{AVAILABLE_OFFERS[0]?.minOrder} — add ₹{Math.max(0, (AVAILABLE_OFFERS[0]?.minOrder || 0) - subtotal)} more
+                  </div>
                 )}
-                {appliedCoupon && <div className="mt-2 text-[10px] font-bold text-[#ea580c]">Saved ₹{bill.discount} with {appliedCoupon.code} 🎉</div>}
+                <div className="mt-1.5 text-[9px] text-black/40">Only one offer per order</div>
               </div>
 
               {/* Bill details */}
@@ -226,7 +210,7 @@ export default function CartDrawer() {
                       <span className={`font-bold ${bill.isFreeDelivery ? "line-through text-black/40" : ""}`}>₹{bill.isFreeDelivery ? "0" : bill.deliveryFee}</span>
                     </div>
                     {bill.smallCartFee > 0 && <div className="flex justify-between text-[#e11d48]"><span>Small cart fee</span><span className="font-bold">₹{bill.smallCartFee}</span></div>}
-                    {bill.discount > 0 && <div className="flex justify-between text-[#ea580c]"><span>Coupon discount ({appliedCoupon?.code})</span><span className="font-bold">-₹{bill.discount}</span></div>}
+                    {bill.discount > 0 && <div className="flex justify-between text-[#ea580c]"><span>Offer discount</span><span className="font-bold">-₹{bill.discount}</span></div>}
                     {tip > 0 && <div className="flex justify-between"><span className="text-black/60">Tip for rider</span><span className="font-bold">₹{tip}</span></div>}
                     <div className="flex justify-between border-t pt-2 text-xs font-black"><span>To pay</span><span>₹{bill.grandTotal}</span></div>
                     {bill.savings > 0 && <div className="rounded-xl bg-[#fff7ed] px-3 py-2 text-center text-[10px] font-bold text-[#ea580c]">You saved ₹{bill.savings} 🎉</div>}
