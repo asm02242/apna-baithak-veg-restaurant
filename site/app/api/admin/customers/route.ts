@@ -9,7 +9,7 @@ function verifyAdmin(request: NextRequest) {
   return admins.find(a => a.id === adminId);
 }
 
-export async function GET() {
+export async function GET\(request: NextRequest\) {
   const admin = await verifyAdmin(new NextRequest(new URL(request.url)));
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

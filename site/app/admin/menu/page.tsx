@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface Category {
   id: string;
@@ -362,7 +363,7 @@ export default function AdminMenu() {
                           <div className="text-xs mt-1">or click to select</div>
                         </div>
                       )}
-                      <input type="file" accept="image/*" onChange={(e) => e.target.files[0] && handleImageUpload(e.target.files[0])} className="hidden" id="imageUpload" />
+                      <input type="file" accept="image/*" onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) handleImageUpload(f); }} className="hidden" id="imageUpload" />
                     </div>
                     <input value={formData.image} onChange={(e) => setFormData({...formData, image: e.target.value})} className="mt-2 w-full rounded-xl border px-3 py-2 text-xs" placeholder="Or paste image URL" />
                   </div>

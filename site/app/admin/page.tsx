@@ -44,7 +44,7 @@ export default function AdminDashboard() {
           customersRes.json(),
           menuRes.json(),
           offersRes.json(),
-          newsData.json(),
+          newsRes.json(),
         ]);
 
         setStats({
