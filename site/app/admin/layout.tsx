@@ -1,14 +1,22 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [authenticated, setAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const isLoginPage = pathname === '/admin/login';
+
   useEffect(() => {
+    if (isLoginPage) {
+      setLoading(false);
+      setAuthenticated(false);
+      return;
+    }
     const checkAuth = async () => {
       try {
         const res = await fetch('/api/admin/auth', {
@@ -25,7 +33,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }
     };
     checkAuth();
-  }, []);
+  }, [isLoginPage]);
 
   const handleLogout = async () => {
     try {
@@ -48,9 +56,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!authenticated) {
+  if (!authenticated && !isLoginPage) {
     router.push('/admin/login');
     return null;
+  }
+
+  if (isLoginPage) {
+    return <>{children}</>;
   }
 
   return (
