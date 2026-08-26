@@ -51,7 +51,10 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <a href={`tel:${SITE.phone}`} className="hidden lg:inline-flex items-center gap-2 rounded-full bg-[#1c0a00] px-4 py-2 text-sm font-semibold text-white hover:bg-black transition">Call: {SITE.phoneDisplay}</a>
+            <div className="hidden lg:flex items-center gap-2">
+              <a href={`tel:${SITE.phone}`} className="rounded-full bg-[#1c0a00] px-4 py-2 text-sm font-semibold text-white hover:bg-black transition">Call: {SITE.phoneDisplay}</a>
+              <a href={`tel:${SITE.phoneSecondary}`} className="rounded-full border bg-white px-4 py-2 text-sm font-semibold text-[#1c0a00] hover:bg-[#fff7ed] transition">{SITE.phoneDisplaySecondary}</a>
+            </div>
             <a href="#menu" className="relative hidden sm:grid h-10 w-10 place-items-center rounded-xl bg-white border shadow text-sm hover:bg-[#fff7ed]">
               <span className={wishCount > 0 ? "text-[#ea580c]" : "text-black/60"}>{wishCount > 0 ? "♥" : "♡"}</span>
               {mounted && wishCount > 0 && <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-[#ea580c] text-[10px] font-black text-white">{wishCount}</span>}

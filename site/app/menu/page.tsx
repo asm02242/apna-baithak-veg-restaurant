@@ -47,6 +47,7 @@ export default function MenuPage() {
             </div>
             <div className="text-right text-white">
               <div className="inline-flex rounded-full bg-white px-3 py-1 text-xs font-black text-[#9a3412]">📞 {SITE.phoneDisplay}</div>
+              <div className="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-black text-white mt-1">📞 {SITE.phoneDisplaySecondary}</div>
               <div className="mt-1 text-xs font-semibold">7:30 AM – 10 PM • Bulk • Tiffin • Home Delivery</div>
             </div>
           </div>
@@ -268,7 +269,7 @@ export default function MenuPage() {
               </div>
             </div>
           </div>
-          <div className="mt-3 text-center text-xs font-bold text-[#7c2d12]">For full detailed menu with images, visit apnabaithak.com/menu or WhatsApp {SITE.phoneDisplay} • Pure Veg • Fresh Taste</div>
+          <div className="mt-3 text-center text-xs font-bold text-[#7c2d12]">For full detailed menu with images, visit apnabaithak.com/menu or WhatsApp {SITE.phoneDisplay} / {SITE.phoneDisplaySecondary} • Pure Veg • Fresh Taste</div>
         </div>
 
         <div className="mt-3 flex justify-center gap-2 print:hidden">

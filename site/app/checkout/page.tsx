@@ -9,6 +9,7 @@ type Address = { id: string; label: string; title: string; full: string; phone: 
 
 const SAVED_ADDRESSES: Address[] = [
   { id: "home", label: "HOME", title: "Home • Eldeco City", full: "Eldeco City, IIM Road, Lucknow • House/Flat No", phone: SITE.phoneDisplay },
+  { id: "home2", label: "HOME 2", title: "Home • Eldeco City", full: "Eldeco City, IIM Road, Lucknow • House/Flat No", phone: SITE.phoneDisplaySecondary },
   { id: "work", label: "WORK", title: "Work • Office", full: "Add work address for faster checkout", phone: "" },
 ];
 
@@ -339,7 +340,10 @@ export default function CheckoutPage() {
             ) : (
               <button onClick={handleRazorpay} disabled={isPaying} className="mt-4 w-full rounded-xl bg-[#16a34a] py-3.5 text-sm font-black text-white disabled:opacity-60">{isPaying ? "Opening…" : `Pay ₹${bill.grandTotal} Online`}</button>
             )}
-            <a href={`tel:${SITE.phone}`} className="mt-2 block text-center text-xs font-bold text-[#ea580c]">Or Call {SITE.phoneDisplay}</a>
+            <div className="mt-2 flex gap-2 text-center">
+              <a href={`tel:${SITE.phone}`} className="flex-1 text-center text-xs font-bold text-[#ea580c]">Call {SITE.phoneDisplay}</a>
+              <a href={`tel:${SITE.phoneSecondary}`} className="flex-1 text-center text-xs font-bold text-[#ea580c]">Call {SITE.phoneDisplaySecondary}</a>
+            </div>
           </div>
         </div>
       </div>
@@ -354,6 +358,7 @@ export default function CheckoutPage() {
             {selectedOffer?.freeItemValue && <div className="mt-2 rounded-xl bg-[#f0fdf4] px-3 py-2 text-xs font-bold text-[#16a34a]">🎁 Free item worth ₹{selectedOffer.freeItemValue} included</div>}
             <div className="mt-4 grid grid-cols-2 gap-2">
               <a href={`https://wa.me/91${SITE.whatsapp}?text=${waText}`} target="_blank" className="rounded-full bg-[#16a34a] py-2.5 text-sm font-black text-white">WhatsApp</a>
+              <a href={`https://wa.me/91${SITE.whatsappSecondary}?text=${waText}`} target="_blank" className="rounded-full border bg-white py-2.5 text-sm font-black text-[#16a34a]">WhatsApp</a>
               <button onClick={handleDone} className="rounded-full border py-2.5 text-sm font-bold">Done</button>
             </div>
           </div>

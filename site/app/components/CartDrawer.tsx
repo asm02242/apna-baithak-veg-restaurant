@@ -275,7 +275,9 @@ export default function CartDrawer() {
             </div>
             <div className="mt-2 flex gap-2">
               <a href={`https://wa.me/91${SITE.whatsapp}`} target="_blank" className="flex-1 rounded-full bg-[#fff7ed] py-2 text-center text-[10px] font-black text-[#ea580c] border">WhatsApp</a>
+              <a href={`https://wa.me/91${SITE.whatsappSecondary}`} target="_blank" className="flex-1 rounded-full bg-[#f0fdf4] py-2 text-center text-[10px] font-black text-[#16a34a] border">WhatsApp</a>
               <a href={`tel:${SITE.phone}`} className="flex-1 rounded-full bg-[#1c0a00] py-2 text-center text-[10px] font-bold text-white">Call • {SITE.phoneDisplay}</a>
+              <a href={`tel:${SITE.phoneSecondary}`} className="flex-1 rounded-full border bg-white py-2 text-center text-[10px] font-bold text-[#1c0a00]">Call • {SITE.phoneDisplaySecondary}</a>
             </div>
           </div>
         )}
