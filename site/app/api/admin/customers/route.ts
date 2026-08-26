@@ -10,7 +10,7 @@ function verifyAdmin(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const admin = await verifyAdmin(new NextRequest(new URL(request.url)));
+  const admin = await verifyAdmin(request);
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const customers = storage.getCustomers();
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const admin = await verifyAdmin(new NextRequest(new URL(request.url)));
+  const admin = await verifyAdmin(request);
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
         wishlist: [],
         favourites: [],
         createdAt: new Date().toISOString(),
+        banned: false,
       };
       const updated = [...customers, newCustomer];
       storage.saveCustomers(updated);
@@ -52,6 +53,18 @@ export async function POST(request: NextRequest) {
 
     if (action === 'delete') {
       const updated = customers.filter(c => c.id !== data.id);
+      storage.saveCustomers(updated);
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === 'ban') {
+      const updated = customers.map(c => c.id === data.id ? { ...c, banned: true } : c);
+      storage.saveCustomers(updated);
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === 'unban') {
+      const updated = customers.map(c => c.id === data.id ? { ...c, banned: false } : c);
       storage.saveCustomers(updated);
       return NextResponse.json({ success: true });
     }

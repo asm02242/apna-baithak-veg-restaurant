@@ -51,6 +51,7 @@ export interface CustomerUser {
   wishlist: string[];
   favourites: string[];
   createdAt: string;
+  banned?: boolean;
 }
 
 export interface Address {
@@ -126,6 +127,21 @@ export interface Order {
   offerApplied?: { id: string; label: string; discount: number; freeItemValue?: number };
 }
 
+export interface BulkOrder {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  company?: string;
+  items: string;
+  quantity: number;
+  deliveryDate: string;
+  message?: string;
+  status: 'new' | 'quoted' | 'confirmed' | 'completed' | 'cancelled';
+  createdAt: string;
+  quotedPrice?: number;
+}
+
 const DEFAULT_ADMINS: AdminUser[] = [
   { id: 'admin-1', username: 'asm2242', password: 'asm.2242', role: 'admin', createdAt: new Date().toISOString() },
 ];
@@ -136,6 +152,50 @@ const DEFAULT_OFFERS: Offer[] = [
   { id: 'freeItem200', label: 'FREE ITEM ₹200', type: 'freeItem', minOrder: 1500, value: 200, freeItemValue: 200, desc: 'Order ₹1500+ and get any item worth ₹200 free', priority: 3, active: true },
   { id: 'freeItem250', label: 'FREE ITEM ₹250', type: 'freeItem', minOrder: 2000, value: 250, freeItemValue: 250, desc: 'Order ₹2000+ and get any item worth ₹250 free', priority: 4, active: true },
   { id: 'bulkOffer', label: 'BULK OFFER', type: 'bulk', minOrder: 3000, value: 0, desc: 'Special bulk order pricing - contact us for custom quote', priority: 5, active: true },
+];
+
+const DEFAULT_BULK_ORDERS: BulkOrder[] = [
+  {
+    id: 'bulk-1',
+    name: 'ABC Corporation',
+    phone: '9876543210',
+    email: 'orders@abc.com',
+    company: 'ABC Corp',
+    items: 'Thali x50, Special Thali x30, Mini Combo x20',
+    quantity: 100,
+    deliveryDate: '2024-02-15',
+    message: 'Need for office lunch event',
+    status: 'quoted',
+    createdAt: '2024-01-20T10:30:00Z',
+    quotedPrice: 25000,
+  },
+  {
+    id: 'bulk-2',
+    name: 'XYZ School',
+    phone: '9876543211',
+    email: 'admin@xyzschool.edu',
+    company: 'XYZ School',
+    items: 'Mini Combo x100, Family Combo x50',
+    quantity: 150,
+    deliveryDate: '2024-02-20',
+    message: 'Annual day function',
+    status: 'new',
+    createdAt: '2024-01-22T14:20:00Z',
+  },
+  {
+    id: 'bulk-3',
+    name: 'Tech Solutions Pvt Ltd',
+    phone: '9876543212',
+    email: 'hr@techsolutions.com',
+    company: 'Tech Solutions',
+    items: 'Family Combo x30, Party Combo x10',
+    quantity: 40,
+    deliveryDate: '2024-02-10',
+    message: 'Team lunch every Friday',
+    status: 'confirmed',
+    createdAt: '2024-01-18T09:15:00Z',
+    quotedPrice: 18500,
+  },
 ];
 
 export const storage = {
@@ -150,6 +210,9 @@ export const storage = {
 
   getOrders: () => readJSON<Order[]>('orders.json', []),
   saveOrders: (orders: Order[]) => writeJSON('orders.json', orders),
+
+  getBulkOrders: () => readJSON<BulkOrder[]>('bulkOrders.json', DEFAULT_BULK_ORDERS),
+  saveBulkOrders: (bulkOrders: BulkOrder[]) => writeJSON('bulkOrders.json', bulkOrders),
 
   getCustomers: () => readJSON<CustomerUser[]>('customers.json', []),
   saveCustomers: (customers: CustomerUser[]) => writeJSON('customers.json', customers),
