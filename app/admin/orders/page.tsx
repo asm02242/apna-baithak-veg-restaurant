@@ -144,7 +144,7 @@ export default function AdminOrders() {
                           <button className="text-xs text-[#ea580c] hover:underline">View Details</button>
                         </td>
                       </tr>
-}
+                    ))}
                   </tbody>
                 </table>
               )}
