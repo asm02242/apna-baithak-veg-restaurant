@@ -27,6 +27,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     checkAuth();
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/admin/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'logout' }),
+      });
+    } catch {
+      // ignore
+    }
+    router.push('/admin/login');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#fff7ed] flex items-center justify-center">
@@ -36,7 +49,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   if (!authenticated) {
-    return <div className="min-h-screen" />;
+    router.push('/admin/login');
+    return null;
   }
 
   return (
@@ -47,10 +61,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#ea580c] text-white">AB</span>
             Admin Panel
           </Link>
-          <form action="/api/admin/auth" method="POST" className="inline">
-            <input type="hidden" name="action" value="logout" />
-            <button type="submit" className="rounded-xl bg-[#ea580c] px-4 py-2 text-sm font-black text-white hover:bg-[#c2410c]">Logout</button>
-          </form>
+          <button onClick={handleLogout} className="rounded-xl bg-[#ea580c] px-4 py-2 text-sm font-black text-white hover:bg-[#c2410c]">Logout</button>
         </div>
       </header>
 
