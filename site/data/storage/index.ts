@@ -2,14 +2,17 @@ import fs from 'fs';
 import path from 'path';
 
 const STORAGE_DIR = path.join(process.cwd(), 'data', 'storage');
+const IS_VERCEL = process.env.VERCEL === '1';
 
 function ensureStorageDir() {
+  if (IS_VERCEL) return; // Skip on Vercel - read-only filesystem
   if (!fs.existsSync(STORAGE_DIR)) {
     fs.mkdirSync(STORAGE_DIR, { recursive: true });
   }
 }
 
 function readJSON<T>(filename: string, defaultValue: T): T {
+  if (IS_VERCEL) return defaultValue;
   ensureStorageDir();
   const filepath = path.join(STORAGE_DIR, filename);
   try {
@@ -22,9 +25,12 @@ function readJSON<T>(filename: string, defaultValue: T): T {
 }
 
 function writeJSON(filename: string, data: unknown) {
+  if (IS_VERCEL) return; // Skip writes on Vercel
   ensureStorageDir();
   const filepath = path.join(STORAGE_DIR, filename);
-  fs.writeFileSync(filepath, JSON.stringify(data, null, 2));
+  try {
+    fs.writeFileSync(filepath, JSON.stringify(data, null, 2));
+  } catch {}
 }
 
 export interface AdminUser {
