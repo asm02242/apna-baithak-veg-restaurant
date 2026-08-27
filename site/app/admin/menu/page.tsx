@@ -220,6 +220,44 @@ export default function AdminMenu() {
     }
   };
 
+  const handleEditCategory = async (id: string, name: string, icon: string) => {
+    try {
+      const res = await fetch('/api/admin/menu', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'updateCategory', id, name, icon }),
+      });
+      const data = await res.json();
+      if (data.success) fetchCategories();
+    } catch (error) {
+      console.error('Edit category failed:', error);
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if (!confirm('Delete this category and all its items?')) return;
+    try {
+      await fetch(`/api/admin/menu?id=${id}&type=category`, { method: 'DELETE' });
+      await fetchCategories();
+    } catch (error) {
+      console.error('Delete category failed:', error);
+    }
+  };
+
+  const handleCategoryEdit = (cat: any) => {
+    const newName = prompt('Edit category name:', cat.name);
+    const newIcon = prompt('Edit category icon (emoji):', cat.icon);
+    if (newName && newName !== cat.name) {
+      handleEditCategory(cat.id, newName, newIcon || cat.icon);
+    }
+  };
+
+  const handleCategoryDelete = (cat: any) => {
+    if (confirm(`Delete category "${cat.name}" and all its items?`)) {
+      handleDeleteCategory(cat.id);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f7f7f7] flex items-center justify-center">
@@ -243,9 +281,13 @@ export default function AdminMenu() {
           <h2 className="font-black text-lg mb-3">Categories</h2>
           <div className="flex flex-wrap gap-2 mb-3">
             {categories.map((cat) => (
-              <Link key={cat.id} href={`/admin/menu?cat=${cat.id}`} className={`rounded-full px-3 py-1.5 text-sm font-bold ${selectedCategory === cat.id ? 'bg-[#ea580c] text-white' : 'bg-white border'}`}>
-                {cat.icon} {cat.name} ({cat.items?.length || 0})
-              </Link>
+              <div key={cat.id} className="flex items-center gap-1">
+                <Link href={`/admin/menu?cat=${cat.id}`} className={`rounded-full px-3 py-1.5 text-sm font-bold ${selectedCategory === cat.id ? 'bg-[#ea580c] text-white' : 'bg-white border'}`}>
+                  {cat.icon} {cat.name} ({cat.items?.length || 0})
+                </Link>
+                <button onClick={() => handleCategoryEdit(cat)} className="p-1.5 text-xs hover:bg-[#ea580c]/10 rounded text-[#ea580c]" title="Edit">✏️</button>
+                <button onClick={() => handleCategoryDelete(cat)} className="p-1.5 text-xs hover:bg-red-500/10 rounded text-red-600" title="Delete">🗑️</button>
+              </div>
             ))}
           </div>
           <div className="flex gap-2">
