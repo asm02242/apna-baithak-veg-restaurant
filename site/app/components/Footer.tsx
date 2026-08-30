@@ -34,6 +34,11 @@ export default function Footer() {
           <span>© {new Date().getFullYear()} Apna Baithak. All rights reserved.</span>
           <span>Made with ♥ in Lucknow • Pure Veg</span>
         </div>
+        <div className="mt-3 flex justify-end">
+          <a href="/admin/login" aria-label="Admin Login" title="Admin Login" className="select-none rounded-full px-2 py-1 text-[10px] font-bold tracking-widest text-white/15 hover:text-white/80 hover:bg-white/10 transition opacity-60 hover:opacity-100">
+            •
+          </a>
+        </div>
       </div>
     </footer>
   );

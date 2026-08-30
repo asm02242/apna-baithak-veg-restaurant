@@ -1,12 +1,46 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { menuCategories, allItems } from "@/data/menu";
+import { menuCategories as staticCategories, allItems as staticItems } from "@/data/menu";
+import type { MenuCategory, MenuItem } from "@/data/menu";
 import FoodCard from "./FoodCard";
 
 export default function MenuSection() {
   const [active, setActive] = useState<string>("all");
   const [q, setQ] = useState("");
   const [focused, setFocused] = useState(false);
+  const [categories, setCategories] = useState<MenuCategory[]>(staticCategories);
+  const [allItems, setAllItems] = useState<MenuItem[]>(staticItems);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/menu", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        if (Array.isArray(d.categories) && d.categories.length) {
+          setCategories(d.categories);
+          if (Array.isArray(d.allItems) && d.allItems.length) setAllItems(d.allItems);
+          else setAllItems(d.categories.flatMap((c: MenuCategory) => c.items));
+        }
+      })
+      .catch(() => {});
+    const onUpdate = () => {
+      fetch("/api/menu", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((d) => {
+          if (Array.isArray(d.categories) && d.categories.length) {
+            setCategories(d.categories);
+            setAllItems(d.allItems ?? d.categories.flatMap((c: MenuCategory) => c.items));
+          }
+        })
+        .catch(() => {});
+    };
+    window.addEventListener("menu-updated", onUpdate as EventListener);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("menu-updated", onUpdate as EventListener);
+    };
+  }, []);
 
   useEffect(() => {
     const h = (e: Event) => {
@@ -81,14 +115,14 @@ export default function MenuSection() {
 
       <div className="mt-4 flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
         <button onClick={() => setActive("all")} className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-bold border ${active === "all" ? "bg-[#1c0a00] text-white border-[#1c0a00]" : "bg-white hover:bg-[#fff7ed]"}`}>All • {allItems.length}</button>
-        {menuCategories.map((c) => (
+        {categories.map((c) => (
           <button key={c.id} onClick={() => setActive(c.id)} className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-bold border ${active === c.id ? "bg-[#ea580c] text-white border-[#ea580c]" : "bg-white hover:bg-[#fff7ed]"}`}>
             {c.icon} {c.name} • {c.items.length}
           </button>
         ))}
       </div>
 
-      <div className="mt-2 text-xs text-black/50">{filtered.length} items {q && `for “${q}”`} {active !== "all" && `in ${menuCategories.find((c) => c.id === active)?.name}`}</div>
+      <div className="mt-2 text-xs text-black/50">{filtered.length} items {q && `for “${q}”`} {active !== "all" && `in ${categories.find((c) => c.id === active)?.name}`}</div>
 
       {filtered.length === 0 ? (
         <div className="mt-6 grid place-items-center rounded-[20px] bg-white p-10 text-sm text-black/60">No items found. Try a different search.</div>

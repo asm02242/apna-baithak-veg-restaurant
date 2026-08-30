@@ -10,9 +10,8 @@ function verifyAdmin(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const admin = await verifyAdmin(new NextRequest(new URL(request.url)));
+  const admin = verifyAdmin(request);
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  
   const categories = storage.getMenu();
   return NextResponse.json({ categories });
 }
@@ -55,7 +54,7 @@ export async function POST(request: NextRequest) {
       const cat = categories.find(c => c.id === categoryId);
       if (!cat) return NextResponse.json({ error: 'Category not found' }, { status: 404 });
       
-      const newItem = {
+      const newItem: MenuItem = {
         id: getNextId('item'),
         name: data.name,
         category: cat.name,
@@ -68,6 +67,7 @@ export async function POST(request: NextRequest) {
         veg: true,
         image: data.image,
         description: data.description,
+        isAvailable: data.isAvailable !== false,
       };
       
       const updated = categories.map(c => 
