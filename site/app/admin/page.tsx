@@ -98,14 +98,14 @@ export default function AdminPage(){
   };
   const toggleAvailable=async(id:string)=>{
     const it=menuItems.find(m=>m.id===id); if(!it) return;
-    const prev=it.isAvailable; const nv=!prev; setMenuItems(prev=>prev.map(p=> p.id===id? {...p,isAvailable:nv}:p));
+    const prevAvail=it.isAvailable; const nv=!prevAvail; setMenuItems(prev=>prev.map(p=> p.id===id? {...p,isAvailable:nv}:p));
     try{
       const r=await fetch('/api/admin/menu',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'updateItem', id, isAvailable:nv }) });
       if(!r.ok) throw new Error('Failed');
       showToast(nv?'Available ✓':'Unavailable ✓');
       window.dispatchEvent(new Event('menu-updated'));
     }catch(e){
-      setMenuItems(prev=>prev.map(p=> p.id===id? {...p,isAvailable:prev}:p));
+      setMenuItems(prevItems=>prevItems.map(p=> p.id===id? {...p,isAvailable:prevAvail}:p));
       showToast('Save failed — Retry');
     }
   };
