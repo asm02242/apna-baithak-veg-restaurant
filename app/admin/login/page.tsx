@@ -85,8 +85,8 @@ export default function AdminLogin() {
           </button>
         </form>
 
-        <div className="mt-6 text-center text-xs text-black/50">
-          Demo: asm2242 / asm.2242
+        <div className="mt-6 text-center text-xs text-black/40">
+          Protected admin access • Attempts are rate-limited
         </div>
       </div>
     </div>

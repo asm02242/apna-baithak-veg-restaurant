@@ -231,6 +231,36 @@ export const storage = {
   getMenuAsync: async () => {
     const seeded = getSeedMenu();
     if (hasNeon()) {
+      try {
+        const { neon } = await import('@neondatabase/serverless');
+        const conn = process.env.DATABASE_URL || process.env.POSTGRES_URL!;
+        const sql = neon(conn);
+        // Try relational tables first
+        const catRows = await sql`SELECT id, name, icon, display_order FROM categories ORDER BY display_order`;
+        if (catRows.length > 0) {
+          const cats: MenuCategory[] = [];
+          for (const c of catRows as any[]) {
+            const items = await sql`SELECT id, name, category_id as "categoryId", description, image_url as image, half_price as half, full_price as full, single_price as price, price_type, is_available as "isAvailable", is_veg as veg, is_featured as "bestSeller", rating FROM menu_items WHERE category_id=${c.id} ORDER BY display_order`;
+            const mapped: MenuItem[] = (items as any[]).map((it: any) => ({
+              id: it.id,
+              name: it.name,
+              category: c.name,
+              categoryId: c.id,
+              price: it.price ?? it.full ?? it.half ?? 0,
+              half: it.half ?? undefined,
+              full: it.full ?? undefined,
+              rating: it.rating ? Number(it.rating) : 4.5,
+              bestSeller: !!it.bestSeller,
+              veg: !!it.veg,
+              image: it.image || '',
+              description: it.description || '',
+              isAvailable: it.isAvailable !== false,
+            }));
+            cats.push({ id: c.id, name: c.name, icon: c.icon || '🍽️', items: mapped });
+          }
+          if (cats.length) return cats;
+        }
+      } catch {}
       const { neonGet, neonSet } = await import('@/lib/neon');
       const data = await neonGet<{ categories: MenuCategory[] }>('menu.json', { categories: seeded });
       if (!data.categories || data.categories.length === 0) {
@@ -242,7 +272,47 @@ export const storage = {
     if ((!menuData.categories || menuData.categories.length === 0) && seeded.length) { writeJSON('menu.json', { categories: seeded }); return seeded; }
     return menuData.categories;
   },
-  saveMenuAsync: async (cats: MenuCategory[]) => { if (hasNeon()) { const { neonSet } = await import('@/lib/neon'); await neonSet('menu.json', { categories: cats }); } writeJSON('menu.json', { categories: cats }); },
+  saveMenuAsync: async (cats: MenuCategory[]) => {
+    if (hasNeon()) {
+      try {
+        const { neon } = await import('@neondatabase/serverless');
+        const conn = process.env.DATABASE_URL || process.env.POSTGRES_URL!;
+        const sql = neon(conn);
+        const existingCats = await sql`SELECT id FROM categories`;
+        const incomingIds = new Set(cats.map(c=>c.id));
+        // Upsert categories and items
+        for (let i = 0; i < cats.length; i++) {
+          const c = cats[i];
+          const slug = c.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+          await sql`INSERT INTO categories (id, name, slug, icon, display_order) VALUES (${c.id}, ${c.name}, ${slug}, ${c.icon}, ${i}) ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, slug=EXCLUDED.slug, icon=EXCLUDED.icon, display_order=EXCLUDED.display_order, updated_at=NOW()`;
+          for (let j = 0; j < c.items.length; j++) {
+            const it: any = c.items[j];
+            const slugIt = it.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+            const priceType = (it.half != null && it.full != null) ? 'half_full' : 'single';
+            const half_price = it.half ?? null;
+            const full_price = it.full ?? null;
+            const single_price = priceType === 'single' ? (it.price ?? it.full ?? null) : null;
+            await sql`INSERT INTO menu_items (id, name, slug, category_id, description, image_url, half_price, full_price, single_price, price_type, is_available, is_veg, is_featured, rating, display_order) VALUES (${it.id}, ${it.name}, ${slugIt + '-' + c.id}, ${c.id}, ${it.description || ''}, ${it.image || ''}, ${half_price}, ${full_price}, ${single_price}, ${priceType}, ${it.isAvailable !== false}, ${it.veg !== false}, ${!!it.bestSeller}, ${it.rating || 4.5}, ${j}) ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, slug=EXCLUDED.slug, category_id=EXCLUDED.category_id, description=EXCLUDED.description, image_url=EXCLUDED.image_url, half_price=EXCLUDED.half_price, full_price=EXCLUDED.full_price, single_price=EXCLUDED.single_price, price_type=EXCLUDED.price_type, is_available=EXCLUDED.is_available, is_veg=EXCLUDED.is_veg, is_featured=EXCLUDED.is_featured, rating=EXCLUDED.rating, display_order=EXCLUDED.display_order, updated_at=NOW()`;
+          }
+          // Delete items that were removed from this category (safe loop)
+          const keepIds = new Set(c.items.map((it: any) => it.id));
+          const existingItems: any[] = await sql`SELECT id FROM menu_items WHERE category_id=${c.id}`;
+          for (const row of existingItems) {
+            if (!keepIds.has(row.id)) await sql`DELETE FROM menu_items WHERE id=${row.id}`;
+          }
+        }
+        // Delete categories that no longer exist (and their items via cascade)
+        for (const row of existingCats as any[]) {
+          if (!incomingIds.has(row.id)) {
+            await sql`DELETE FROM categories WHERE id=${row.id}`;
+          }
+        }
+      } catch (e) { console.error('saveMenuAsync relational failed', e); }
+      const { neonSet } = await import('@/lib/neon');
+      await neonSet('menu.json', { categories: cats });
+    }
+    writeJSON('menu.json', { categories: cats });
+  },
 };
 
 export function getNextId(prefix: string = 'id') {

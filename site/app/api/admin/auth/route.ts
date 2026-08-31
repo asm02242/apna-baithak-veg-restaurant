@@ -1,17 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { storage, AdminUser, getNextId } from '@/data/storage';
+import { storage } from '@/data/storage';
+
+// Simple in-memory rate limit: 5 fails / 15min per IP
+const fails = globalThis as unknown as { __ADMIN_FAILS__?: Map<string, { count: number; until: number }> };
+if (!fails.__ADMIN_FAILS__) fails.__ADMIN_FAILS__ = new Map();
+const failMap = fails.__ADMIN_FAILS__!;
+
+function getIp(req: NextRequest) {
+  return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || 'unknown';
+}
 
 export async function POST(request: NextRequest) {
   try {
     const { action, username, password } = await request.json();
 
     if (action === 'login') {
-      const admins = await storage.getAdminsAsync();
-      const admin = admins.find(a => a.username === username && a.password === password);
-      
+      const ip = getIp(request);
+      const rec = failMap.get(ip);
+      if (rec && rec.until > Date.now()) {
+        const wait = Math.ceil((rec.until - Date.now()) / 1000);
+        return NextResponse.json({ error: `Too many attempts. Try again in ${wait}s` }, { status: 429 });
+      }
+      // Credentials from env (secure) with fallback for local dev
+      const envUser = process.env.ADMIN_USERNAME || process.env.NEXT_PUBLIC_ADMIN_USERNAME || '';
+      const envPass = process.env.ADMIN_PASSWORD || '';
+      let admin: any = null;
+      if (envUser && envPass) {
+        if (username === envUser && password === envPass) {
+          const admins = await storage.getAdminsAsync();
+          admin = admins.find(a => a.username === envUser) || { id: 'admin-1', username: envUser, role: 'admin' as const };
+        }
+      } else {
+        const admins = await storage.getAdminsAsync();
+        admin = admins.find(a => a.username === username && a.password === password);
+      }
       if (!admin) {
+        const cur = failMap.get(ip) || { count: 0, until: 0 };
+        cur.count += 1;
+        if (cur.count >= 5) cur.until = Date.now() + 15 * 60 * 1000;
+        failMap.set(ip, cur);
         return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
       }
+      failMap.delete(ip);
 
       const sessionToken = `admin_${admin.id}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
       
