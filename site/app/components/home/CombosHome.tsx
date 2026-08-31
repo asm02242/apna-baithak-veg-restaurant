@@ -18,38 +18,47 @@ export default function CombosHome() {
   const { cart, addToCart, increase, decrease } = useCart();
   const [combos, setCombos] = useState<(MenuItem & { badge?: string })[]>(fallbackCombos);
 
+  const fetchCombos = async () => {
+    try {
+      const r = await fetch("/api/menu", { cache: "no-store" });
+      const d = await r.json();
+      const cats: any[] = d.categories || [];
+      const comboCat = cats.find((c) => c.id === "combos");
+      const thaliCat = cats.find((c) => c.id === "thali");
+      const items: (MenuItem & { badge?: string })[] = [];
+      if (comboCat?.items?.length) {
+        for (const it of comboCat.items) {
+          const name = it.name as string;
+          let badge = "Combo";
+          if (/mini/i.test(name)) badge = "Solo";
+          else if (/family/i.test(name)) badge = "Bestseller";
+          else if (/party/i.test(name)) badge = "Party";
+          items.push({ ...it, badge });
+        }
+      }
+      // Add Baithak Combo: use Special Thali as 4th card if available, else fallback
+      const special = thaliCat?.items?.find((x: any) => /special/i.test(x.name)) || cats.flatMap((c) => c.items).find((x: any) => /special.*thali/i.test(x.name));
+      if (special) {
+        items.push({ ...special, badge: "Thali Special", name: special.name.includes("Thali") ? special.name : "Baithak Special Thali" });
+      }
+      // Ensure 4 cards; pad with fallback if needed, slice to 4
+      let final = items.length >= 4 ? items.slice(0, 4) : [...items, ...fallbackCombos.filter((f) => !items.find((x) => x.id === f.id))].slice(0, 4);
+      if (final.length === 0) final = fallbackCombos;
+      setCombos(final.slice(0, 4));
+    } catch {}
+  };
+
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      try {
-        const r = await fetch("/api/menu", { cache: "no-store" });
-        const d = await r.json();
-        const cats: any[] = d.categories || [];
-        const comboCat = cats.find((c) => c.id === "combos");
-        const thaliCat = cats.find((c) => c.id === "thali");
-        const items: (MenuItem & { badge?: string })[] = [];
-        if (comboCat?.items?.length) {
-          for (const it of comboCat.items) {
-            const name = it.name as string;
-            let badge = "Combo";
-            if (/mini/i.test(name)) badge = "Solo";
-            else if (/family/i.test(name)) badge = "Bestseller";
-            else if (/party/i.test(name)) badge = "Party";
-            items.push({ ...it, badge });
-          }
-        }
-        // Add Baithak Combo: use Special Thali as 4th card if available, else fallback
-        const special = thaliCat?.items?.find((x: any) => /special/i.test(x.name)) || cats.flatMap((c) => c.items).find((x: any) => /special.*thali/i.test(x.name));
-        if (special) {
-          items.push({ ...special, badge: "Thali Special", name: special.name.includes("Thali") ? special.name : "Baithak Special Thali" });
-        }
-        // Ensure 4 cards; pad with fallback if needed, slice to 4
-        let final = items.length >= 4 ? items.slice(0, 4) : [...items, ...fallbackCombos.filter((f) => !items.find((x) => x.id === f.id))].slice(0, 4);
-        if (final.length === 0) final = fallbackCombos;
-        if (!cancelled && final.length) setCombos(final.slice(0, 4));
-      } catch {}
-    })();
-    return () => { cancelled = true; };
+    const load = async () => {
+      if (cancelled) return;
+      await fetchCombos();
+    };
+    load();
+    const id = setInterval(load, 15000);
+    const h = () => load();
+    window.addEventListener("menu-updated", h as any);
+    return () => { cancelled = true; clearInterval(id); window.removeEventListener("menu-updated", h as any); };
   }, []);
 
   const inCart = (id: string) => cart.find((c) => c.id === id);
@@ -68,17 +77,19 @@ export default function CombosHome() {
         {combos.map((it) => {
           const entry = inCart(it.id);
           const img = getImage(it);
+          const isAvailable = it.isAvailable !== false;
           return (
-            <div key={it.id} className="flex flex-col overflow-hidden rounded-[24px] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.06)] ring-1 ring-black/[0.04] card-hover">
+            <div key={it.id} className={`flex flex-col overflow-hidden rounded-[24px] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.06)] ring-1 ring-black/[0.04] card-hover ${!isAvailable ? 'opacity-70' : ''}`}>
               <div className="relative h-[156px] overflow-hidden bg-[#fff7ed]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={img} alt={it.name} className="h-full w-full object-cover" loading="lazy" onError={(e) => ((e.currentTarget.style.display = "none"))} />
+                <img src={img} alt={it.name} className={`h-full w-full object-cover ${!isAvailable ? 'grayscale' : ''}`} loading="lazy" onError={(e) => ((e.currentTarget.style.display = "none"))} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
                 <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[10px] font-black shadow">
                   <span className="h-3 w-3 rounded-[3px] border border-[#16a34a] grid place-items-center"><span className="h-1.5 w-1.5 rounded-full bg-[#16a34a]" /></span> PURE VEG
                 </span>
                 <span className="absolute right-3 top-3 rounded-full bg-[#ea580c] px-2.5 py-1 text-[11px] font-black text-white shadow">{(it as any).badge || "Combo"}</span>
                 <span className="absolute bottom-3 left-3 rounded-full bg-[#1c0a00] px-2.5 py-1 text-xs font-bold text-white">★ {it.rating.toFixed(1)}</span>
+                {!isAvailable && <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/80 px-3 py-1 text-xs font-black text-white">Unavailable</span>}
               </div>
               <div className="flex flex-1 flex-col p-4">
                 <div className="text-[11px] font-bold tracking-[0.08em] text-[#ea580c]">{it.category.toUpperCase()}</div>
@@ -86,7 +97,9 @@ export default function CombosHome() {
                 <div className="mt-1 line-clamp-2 text-xs leading-5 text-black/60">{it.description || "Fresh • Hot • Pure Veg"}</div>
                 <div className="mt-3 flex items-center justify-between gap-3">
                   <div className="text-[20px] font-black text-[#1c0a00]">₹{it.price}</div>
-                  {!entry ? (
+                  {!isAvailable ? (
+                    <div className="rounded-full bg-gray-100 py-2 text-center text-xs font-black text-black/50 border">Unavailable</div>
+                  ) : !entry ? (
                     <button
                       onClick={() => addToCart({ id: it.id, name: it.name, price: it.price, category: it.category, image: img })}
                       className="rounded-full bg-[#ea580c] px-5 py-2.5 text-xs font-black text-white shadow hover:bg-[#c2410c] transition"

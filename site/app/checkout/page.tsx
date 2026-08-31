@@ -18,7 +18,26 @@ function loadRazorpay(): Promise<boolean> {
   });
 }
 
-type AddressOpt = { id: string; label: string; title: string; full: string; phone: string };
+type AddressOpt = { 
+  id: string; 
+  label: string; 
+  title: string; 
+  full: string; 
+  phone: string;
+  name?: string;
+  house_no?: string;
+  building_name?: string;
+  street?: string;
+  landmark?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  latitude?: number;
+  longitude?: number;
+  address_type?: string;
+  is_default?: boolean;
+  address?: string;
+};
 
 export default function CheckoutPage() {
   const { cart, bill, count, increase, decrease, clearCart, tip, setTip, deliveryType, setDeliveryType, selectedOffer, setSelectedOffer, eligibleOffers, subtotal } = useCart();
@@ -26,7 +45,13 @@ export default function CheckoutPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [houseNo, setHouseNo] = useState("");
+  const [buildingName, setBuildingName] = useState("");
+  const [street, setStreet] = useState("");
   const [landmark, setLandmark] = useState("");
+  const [city, setCity] = useState("Lucknow");
+  const [state, setState] = useState("Uttar Pradesh");
+  const [pincode, setPincode] = useState("");
   const [selectedAddr, setSelectedAddr] = useState<string>("");
   const [newAddrLabel, setNewAddrLabel] = useState("Home");
   const [showNewAddr, setShowNewAddr] = useState(false);
@@ -83,7 +108,26 @@ export default function CheckoutPage() {
 
   const effectiveAddresses: AddressOpt[] = useMemo(() => {
     if (neonAddrs.length) {
-      return neonAddrs.map((a: any) => ({ id: a.id, label: (a.address_type || "home").toUpperCase(), title: `${a.address_type || "home"} • ${a.city || "Lucknow"}`, full: `${a.address}${a.landmark ? ", " + a.landmark : ""}${a.pincode ? " - " + a.pincode : ""}`, phone: a.phone || phone || SITE.phoneDisplay }));
+      return neonAddrs.map((a: any) => ({ 
+        id: a.id, 
+        label: (a.address_type || "home").toUpperCase(), 
+        title: `${a.address_type || "home"} • ${a.city || "Lucknow"}`, 
+        full: `${a.house_no ? a.house_no + ", " : ""}${a.street ? a.street + ", " : ""}${a.building_name ? a.building_name + ", " : ""}${a.landmark ? a.landmark + ", " : ""}${a.city ? a.city + ", " : ""}${a.state ? a.state + " " : ""}${a.pincode ? " - " + a.pincode : ""}`,
+        phone: a.phone || phone || SITE.phoneDisplay,
+        name: a.name,
+        house_no: a.house_no,
+        building_name: a.building_name,
+        street: a.street,
+        landmark: a.landmark,
+        city: a.city,
+        state: a.state,
+        pincode: a.pincode,
+        latitude: a.latitude,
+        longitude: a.longitude,
+        address_type: a.address_type,
+        is_default: a.is_default,
+        address: a.address
+      }));
     }
     return SAVED;
   }, [neonAddrs, SAVED, phone]);
@@ -99,7 +143,15 @@ export default function CheckoutPage() {
     const e: typeof errors = {};
     if (!name.trim()) e.name = "Name required";
     if (!phone.trim() || phone.replace(/\D/g, "").length < 10) e.phone = "Valid 10-digit phone required";
-    if (deliveryType === "delivery" && !resolvedAddress.trim()) e.address = "Delivery address required";
+    if (deliveryType === "delivery") {
+      if (showNewAddr) {
+        if (!houseNo.trim()) e.address = "House / Flat / Plot No. required";
+        else if (!street.trim()) e.address = "Street / Road / Area required";
+        else if (!pincode.trim() || pincode.length !== 6) e.address = "Valid 6-digit PIN Code required";
+      } else if (!resolvedAddress.trim()) {
+        e.address = "Delivery address required";
+      }
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -364,18 +416,65 @@ export default function CheckoutPage() {
                           <button key={l} onClick={() => setNewAddrLabel(l)} className={`rounded-full px-3 py-1.5 text-xs font-black border ${newAddrLabel === l ? "bg-[#1c0a00] text-white border-[#1c0a00]" : "bg-white border-black/10"}`}>{l}</button>
                         ))}
                       </div>
-                      <textarea value={address} onChange={(e) => setAddress(e.target.value)} placeholder="House / Flat / Street / Landmark *" rows={2} className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#ea580c]/20 ${errors.address ? "border-red-400" : "border-black/10 bg-white"}`} />
-                      <input value={landmark} onChange={(e) => setLandmark(e.target.value)} placeholder="Landmark (optional)" className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#ea580c]/20" />
+                      
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-bold text-black/60">Customer Name *</label>
+                          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" className={`mt-1 w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#ea580c]/20 ${errors.name ? "border-red-400 bg-red-50" : "border-black/10 bg-white"}`} />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-black/60">Phone *</label>
+                          <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="10-digit mobile" inputMode="numeric" className={`mt-1 w-full rounded-2xl border px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-[#ea580c]/20 ${errors.phone ? "border-red-400 bg-red-50" : "border-black/10 bg-white"}`} />
+                        </div>
+                      </div>
+                      
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-bold text-black/60">House / Flat / Plot No. *</label>
+                          <input value={houseNo} onChange={(e) => setHouseNo(e.target.value)} placeholder="e.g., 123 / Flat 4B / Plot 56" className="mt-1 w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#ea580c]/20" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-black/60">Building / Apartment Name</label>
+                          <input value={buildingName} onChange={(e) => setBuildingName(e.target.value)} placeholder="e.g., Green Valley Apts / Tower C" className="mt-1 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#ea580c]/20" />
+                        </div>
+                      </div>
+                      
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-bold text-black/60">Street / Road / Area *</label>
+                          <input value={street} onChange={(e) => setStreet(e.target.value)} placeholder="e.g., IIM Road / Main Street" className="mt-1 w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#ea580c]/20" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-black/60">Landmark</label>
+                          <input value={landmark} onChange={(e) => setLandmark(e.target.value)} placeholder="Near Mall / Opposite Park" className="mt-1 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#ea580c]/20" />
+                        </div>
+                      </div>
+                      
+                      <div className="grid sm:grid-cols-3 gap-3">
+                        <div>
+                          <label className="text-xs font-bold text-black/60">City</label>
+                          <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Lucknow" className="mt-1 w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#ea580c]/20" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-black/60">State</label>
+                          <input value={state} onChange={(e) => setState(e.target.value)} placeholder="Uttar Pradesh" className="mt-1 w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#ea580c]/20" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-black/60">PIN Code *</label>
+                          <input value={pincode} onChange={(e) => setPincode(e.target.value)} placeholder="226013" inputMode="numeric" maxLength={6} className="mt-1 w-full rounded-2xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#ea580c]/20" />
+                        </div>
+                      </div>
+                      
                       <div className="flex gap-2">
                         <button
                           onClick={async () => {
-                            if (!address.trim()) { setErrors((p) => ({ ...p, address: "Address required" })); return; }
-                            // Try Neon save if logged
+                            if (!houseNo.trim() || !street.trim() || !pincode.trim()) { setErrors((p) => ({ ...p, address: "House/Plot No., Street & PIN Code required" })); return; }
+                            const fullAddress = `${houseNo.trim()}, ${street.trim()}${buildingName.trim() ? ", " + buildingName.trim() : ""}${landmark.trim() ? ", " + landmark.trim() : ""}, ${city.trim()}, ${state.trim()} - ${pincode.trim()}`;
                             try {
-                              const r = await fetch("/api/addresses", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "add", address: address.trim(), landmark: landmark.trim() || undefined, city: "Lucknow", state: "UP", address_type: newAddrLabel.toLowerCase(), is_default: false }) });
+                              const r = await fetch("/api/addresses", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "add", address: fullAddress, house_no: houseNo.trim(), building_name: buildingName.trim(), street: street.trim(), landmark: landmark.trim(), city: city.trim(), state: state.trim(), pincode: pincode.trim(), address_type: newAddrLabel.toLowerCase(), is_default: false, name: name.trim(), phone: phone.replace(/\D/g, "") }) });
                               if (r.ok) {
                                 const d = await r.json();
-                                setNeonAddrs((p) => [...p, { id: d.id, address: address.trim(), landmark: landmark.trim(), city: "Lucknow", address_type: newAddrLabel.toLowerCase() }]);
+                                setNeonAddrs((p) => [...p, { id: d.id, address: fullAddress, house_no: houseNo.trim(), building_name: buildingName.trim(), street: street.trim(), landmark: landmark.trim(), city: city.trim(), state: state.trim(), pincode: pincode.trim(), address_type: newAddrLabel.toLowerCase(), name: name.trim(), phone: phone.replace(/\D/g, "") }]);
                               }
                             } catch {}
                             setShowNewAddr(false);
