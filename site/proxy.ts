@@ -32,7 +32,7 @@ export async function proxy(request: NextRequest) {
 
   // Check admin routes - both page routes and API routes
   if (isAdmin || isApiAdmin) {
-    const token = request.cookies.get('admin_session')?.value;
+    const token = request.cookies.get('admin_session')?.value || '';
     const isValid = await verifyAdminToken(token);
     
     if (!isValid) {
