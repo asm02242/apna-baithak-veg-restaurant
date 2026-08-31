@@ -42,21 +42,21 @@ export default function Header() {
     >
       <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
         <div className="flex h-[64px] lg:h-[72px] items-center justify-between gap-3">
-          {/* Logo */}
+          {/* Logo — circle shape */}
           <Link href="/" className="flex items-center gap-3 shrink-0">
-            <div className="h-11 w-11 rounded-2xl overflow-hidden bg-[#1c0a00] ring-1 ring-black/10 shadow grid place-items-center">
+            <div className="h-11 w-11 rounded-full overflow-hidden bg-[#1c0a00] ring-2 ring-white shadow-[0_2px_12px_rgba(28,10,0,0.14)] border border-black/5 grid place-items-center shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/logo-neon.svg"
                 alt="Apna Baithak"
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover rounded-full"
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).style.display = "none";
                   const sib = e.currentTarget.nextElementSibling as HTMLElement | null;
                   if (sib) sib.style.display = "grid";
                 }}
               />
-              <span className="hidden h-full w-full place-items-center bg-[#ea580c] text-white font-black">AB</span>
+              <span className="hidden h-full w-full place-items-center rounded-full bg-[#ea580c] text-white font-black">AB</span>
             </div>
             <div className="leading-none">
               <div className="font-display text-[16px] lg:text-[18px] font-extrabold tracking-tight text-[#1c0a00]">APNA BAITHAK</div>

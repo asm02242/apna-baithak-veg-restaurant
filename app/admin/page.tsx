@@ -78,12 +78,15 @@ export default function AdminPage(){
         // refetch
         const mr=await fetch('/api/admin/menu',{cache:'no-store'}); const md=await mr.json(); if(md.categories){ setServerCats(md.categories); targetCat = md.categories.find((c:ServerCategory)=>c.name===form.category) || targetCat!; }
       }
+      const halfToSend = hasHalf ? form.priceHalf : null;
+      const fullToSend = hasHalf ? form.priceFull : null;
+      const priceToSend = form.priceFull;
       if(editing){
-        const res=await fetch('/api/admin/menu',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'updateItem', id:editing.id, name:form.title, price:form.priceFull, half:form.priceHalf, full:form.priceFull, image:form.image, isAvailable:form.isAvailable, category:form.category, categoryId:targetCat!.id }) });
+        const res=await fetch('/api/admin/menu',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'updateItem', id:editing.id, name:form.title, price:priceToSend, half:halfToSend, full:fullToSend, image:form.image, isAvailable:form.isAvailable, category:form.category, categoryId:targetCat!.id }) });
         if(!res.ok) throw new Error('Update failed');
         showToast(`Updated "${form.title}" — live on all devices`);
       } else {
-        const res=await fetch('/api/admin/menu',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'addItem', categoryId:targetCat!.id, name:form.title, price:form.priceFull, half:form.priceHalf, full:form.priceFull, image:form.image, isAvailable:form.isAvailable, description:'' }) });
+        const res=await fetch('/api/admin/menu',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'addItem', categoryId:targetCat!.id, name:form.title, price:priceToSend, half:halfToSend, full:fullToSend, image:form.image, isAvailable:form.isAvailable, description:'' }) });
         if(!res.ok) throw new Error('Add failed');
         showToast(`Added "${form.title}" — live on all devices`);
       }
