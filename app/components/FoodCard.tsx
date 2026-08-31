@@ -45,13 +45,14 @@ function getImage(item: MenuItem) {
   return catMap[item.categoryId] || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop";
 }
 
-export default function FoodCard({ item }: { item: MenuItem }) {
+export default function FoodCard({ item }: { item: MenuItem & { isAvailable?: boolean } }) {
   const { cart, addToCart, increase, decrease } = useCart();
   const { openDetail } = useDetail();
   const { toggle, isWishlisted } = useWishlist();
   const wish = isWishlisted(item.id);
   const inCart = (id: string) => cart.find((c) => c.id === id);
 
+  const isAvailable = (item as any).isAvailable !== false;
   const hasVariant = item.half !== undefined && item.full !== undefined;
   const halfId = `${item.id}-half`;
   const fullId = `${item.id}-full`;
@@ -61,10 +62,10 @@ export default function FoodCard({ item }: { item: MenuItem }) {
 
   const img = getImage(item);
   return (
-    <div className="group flex flex-col rounded-[20px] bg-white p-3 shadow-[0_8px_24px_rgba(28,10,0,0.06)] ring-1 ring-black/[0.04] card-hover">
+    <div className={`group flex flex-col rounded-[20px] bg-white p-3 shadow-[0_8px_24px_rgba(28,10,0,0.06)] ring-1 ring-black/[0.04] card-hover ${!isAvailable ? 'opacity-75' : ''}`}>
       <div onClick={() => openDetail(item)} className="relative overflow-hidden rounded-2xl cursor-pointer">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={img} alt={item.name} className="h-[118px] w-full object-cover" loading="lazy" onError={(e) => ((e.currentTarget.style.display = "none"), ((e.currentTarget.nextElementSibling as HTMLElement).style.display = "grid"))} />
+        <img src={img} alt={item.name} className={`h-[118px] w-full object-cover ${!isAvailable ? 'grayscale' : ''}`} loading="lazy" onError={(e) => ((e.currentTarget.style.display = "none"), ((e.currentTarget.nextElementSibling as HTMLElement).style.display = "grid"))} />
         <div className="hidden h-[118px] bg-gradient-to-br from-orange-50 via-amber-50 to-[#fff7ed] place-items-center text-[42px]">{emojiMap[item.categoryId] ?? "🍽️"}</div>
         <button
           onClick={(e) => {
@@ -80,6 +81,7 @@ export default function FoodCard({ item }: { item: MenuItem }) {
           <span className="h-3 w-3 rounded-[3px] border border-[#16a34a] grid place-items-center"><span className="h-1.5 w-1.5 rounded-full bg-[#16a34a]" /></span> VEG
         </span>
         <span className="absolute right-2 top-2 rounded-full bg-[#1c0a00] px-2 py-1 text-[11px] font-bold text-white">★ {item.rating.toFixed(1)}</span>
+        {!isAvailable && <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black/80 px-3 py-1 text-xs font-black text-white backdrop-blur">Unavailable</span>}
       </div>
 
       <div onClick={() => openDetail(item)} className="flex-1 pt-3 cursor-pointer">
@@ -93,7 +95,9 @@ export default function FoodCard({ item }: { item: MenuItem }) {
       </div>
 
       <div className="mt-3">
-        {hasVariant ? (
+        {!isAvailable ? (
+          <div className="rounded-full bg-gray-100 py-2 text-center text-xs font-black text-black/50 border">Unavailable</div>
+        ) : hasVariant ? (
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-2xl border bg-[#fff7ed] p-1.5">
               <div className="text-center text-xs font-bold">Half</div>

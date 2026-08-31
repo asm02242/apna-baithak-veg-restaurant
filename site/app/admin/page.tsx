@@ -98,11 +98,16 @@ export default function AdminPage(){
   };
   const toggleAvailable=async(id:string)=>{
     const it=menuItems.find(m=>m.id===id); if(!it) return;
-    const nv=!it.isAvailable; setMenuItems(prev=>prev.map(p=> p.id===id? {...p,isAvailable:nv}:p));
+    const prev=it.isAvailable; const nv=!prev; setMenuItems(prev=>prev.map(p=> p.id===id? {...p,isAvailable:nv}:p));
     try{
-      await fetch('/api/admin/menu',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'updateItem', id, isAvailable:nv }) });
+      const r=await fetch('/api/admin/menu',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'updateItem', id, isAvailable:nv }) });
+      if(!r.ok) throw new Error('Failed');
+      showToast(nv?'Available ✓':'Unavailable ✓');
       window.dispatchEvent(new Event('menu-updated'));
-    }catch{}
+    }catch(e){
+      setMenuItems(prev=>prev.map(p=> p.id===id? {...p,isAvailable:prev}:p));
+      showToast('Save failed — Retry');
+    }
   };
   const updateBulkStatus=async(id:string,status:BulkOrder['status'])=>{
     const serverStatus= uiStatusToServer(status);
