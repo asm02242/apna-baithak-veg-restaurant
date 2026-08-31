@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { storage, Order, getNextId } from '@/data/storage';
 
-function verifyAdmin(request: NextRequest) {
+async function verifyAdmin(request: NextRequest) {
   const sessionToken = request.cookies.get('admin_session')?.value;
   if (!sessionToken) return null;
   const adminId = sessionToken.split('_')[1];
-  const admins = storage.getAdmins();
+  const admins = await storage.getAdminsAsync();
   return admins.find(a => a.id === adminId);
 }
 
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get('status');
   const limit = parseInt(searchParams.get('limit') || '50');
 
-  let orders = storage.getOrders();
+  let orders = await storage.getOrdersAsync();
   
   if (status && status !== 'all') {
     orders = orders.filter(o => o.status === status);
@@ -29,20 +29,20 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const admin = await verifyAdmin(new NextRequest(new URL(request.url)));
+  const admin = await verifyAdmin(request);
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const data = await request.json();
     const { action, order } = data;
 
-    const orders = storage.getOrders();
+    const orders = await storage.getOrdersAsync();
 
     if (action === 'updateStatus') {
       const updated = orders.map(o => 
         o.id === data.id ? { ...o, status: data.status, updatedAt: new Date().toISOString() } : o
       );
-      storage.saveOrders(updated);
+      await storage.saveOrdersAsync(updated);
       return NextResponse.json({ success: true });
     }
 
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date().toISOString(),
       };
       const updated = [newOrder, ...orders];
-      storage.saveOrders(updated);
+      await storage.saveOrdersAsync(updated);
       return NextResponse.json({ success: true, order: newOrder });
     }
 

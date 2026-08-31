@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { storage, Offer, getNextId } from '@/data/storage';
 
-function verifyAdmin(request: NextRequest) {
+async function verifyAdmin(request: NextRequest) {
   const sessionToken = request.cookies.get('admin_session')?.value;
   if (!sessionToken) return null;
   const adminId = sessionToken.split('_')[1];
-  const admins = storage.getAdmins();
+  const admins = await storage.getAdminsAsync();
   return admins.find(a => a.id === adminId);
 }
 
 export async function GET(request: NextRequest) {
-  const admin = await verifyAdmin(new NextRequest(new URL(request.url)));
+  const admin = await verifyAdmin(request);
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   
-  const offers = storage.getOffers();
+  const offers = await storage.getOffersAsync();
   return NextResponse.json({ offers });
 }
 
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     const data = await request.json();
     const { action, offer } = data;
 
-    const offers = storage.getOffers();
+    const offers = await storage.getOffersAsync();
 
     if (action === 'add') {
       const newOffer = {
@@ -40,19 +40,19 @@ export async function POST(request: NextRequest) {
         active: data.active !== false,
       };
       const updated = [...offers, newOffer];
-      storage.saveOffers(updated);
+      await storage.saveOffersAsync(updated);
       return NextResponse.json({ success: true, offer: newOffer });
     }
 
     if (action === 'update') {
       const updated = offers.map(o => o.id === data.id ? { ...o, ...data } : o);
-      storage.saveOffers(updated);
+      await storage.saveOffersAsync(updated);
       return NextResponse.json({ success: true });
     }
 
     if (action === 'toggle') {
       const updated = offers.map(o => o.id === data.id ? { ...o, active: data.active } : o);
-      storage.saveOffers(updated);
+      await storage.saveOffersAsync(updated);
       return NextResponse.json({ success: true });
     }
 
@@ -71,8 +71,8 @@ export async function DELETE(request: NextRequest) {
 
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
-  const offers = storage.getOffers();
+  const offers = await storage.getOffersAsync();
   const updated = offers.filter(o => o.id !== id);
-  storage.saveOffers(updated);
+  await storage.saveOffersAsync(updated);
   return NextResponse.json({ success: true });
 }

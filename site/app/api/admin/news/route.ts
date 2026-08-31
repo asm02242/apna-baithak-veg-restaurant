@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { storage, NewsItem, getNextId } from '@/data/storage';
 
-function verifyAdmin(request: NextRequest) {
+async function verifyAdmin(request: NextRequest) {
   const sessionToken = request.cookies.get('admin_session')?.value;
   if (!sessionToken) return null;
   const adminId = sessionToken.split('_')[1];
-  const admins = storage.getAdmins();
+  const admins = await storage.getAdminsAsync();
   return admins.find(a => a.id === adminId);
 }
 
 export async function GET(request: NextRequest) {
-  const admin = await verifyAdmin(new NextRequest(new URL(request.url)));
+  const admin = await verifyAdmin(request);
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   
-  const news = storage.getNews();
+  const news = await storage.getNewsAsync();
   return NextResponse.json({ news });
 }
 
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     const data = await request.json();
     const { action, news } = data;
 
-    const newsList = storage.getNews();
+    const newsList = await storage.getNewsAsync();
 
     if (action === 'add') {
       const newNews = {
@@ -38,19 +38,19 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date().toISOString(),
       };
       const updated = [newNews, ...newsList];
-      storage.saveNews(updated);
+      await storage.saveNewsAsync(updated);
       return NextResponse.json({ success: true, news: newNews });
     }
 
     if (action === 'update') {
       const updated = newsList.map(n => n.id === data.id ? { ...n, ...data, updatedAt: new Date().toISOString() } : n);
-      storage.saveNews(updated);
+      await storage.saveNewsAsync(updated);
       return NextResponse.json({ success: true });
     }
 
     if (action === 'toggle') {
       const updated = newsList.map(n => n.id === data.id ? { ...n, active: data.active, updatedAt: new Date().toISOString() } : n);
-      storage.saveNews(updated);
+      await storage.saveNewsAsync(updated);
       return NextResponse.json({ success: true });
     }
 
@@ -69,8 +69,8 @@ export async function DELETE(request: NextRequest) {
 
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
-  const newsList = storage.getNews();
+  const newsList = await storage.getNewsAsync();
   const updated = newsList.filter(n => n.id !== id);
-  storage.saveNews(updated);
+  await storage.saveNewsAsync(updated);
   return NextResponse.json({ success: true });
 }

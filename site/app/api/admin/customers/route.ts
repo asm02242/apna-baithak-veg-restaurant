@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { storage, CustomerUser, getNextId } from '@/data/storage';
 
-function verifyAdmin(request: NextRequest) {
+async function verifyAdmin(request: NextRequest) {
   const sessionToken = request.cookies.get('admin_session')?.value;
   if (!sessionToken) return null;
   const adminId = sessionToken.split('_')[1];
-  const admins = storage.getAdmins();
+  const admins = await storage.getAdminsAsync();
   return admins.find(a => a.id === adminId);
 }
 
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const admin = await verifyAdmin(request);
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const customers = storage.getCustomers();
+  const customers = await storage.getCustomersAsync();
   return NextResponse.json({ customers });
 }
 
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     const data = await request.json();
     const { action, customer } = data;
 
-    const customers = storage.getCustomers();
+    const customers = await storage.getCustomersAsync();
 
     if (action === 'add') {
       const newCustomer: CustomerUser = {
@@ -41,31 +41,31 @@ export async function POST(request: NextRequest) {
         banned: false,
       };
       const updated = [...customers, newCustomer];
-      storage.saveCustomers(updated);
+      await storage.saveCustomersAsync(updated);
       return NextResponse.json({ success: true, customer: newCustomer });
     }
 
     if (action === 'update') {
       const updated = customers.map(c => c.id === data.id ? { ...c, ...data } : c);
-      storage.saveCustomers(updated);
+      await storage.saveCustomersAsync(updated);
       return NextResponse.json({ success: true });
     }
 
     if (action === 'delete') {
       const updated = customers.filter(c => c.id !== data.id);
-      storage.saveCustomers(updated);
+      await storage.saveCustomersAsync(updated);
       return NextResponse.json({ success: true });
     }
 
     if (action === 'ban') {
       const updated = customers.map(c => c.id === data.id ? { ...c, banned: true } : c);
-      storage.saveCustomers(updated);
+      await storage.saveCustomersAsync(updated);
       return NextResponse.json({ success: true });
     }
 
     if (action === 'unban') {
       const updated = customers.map(c => c.id === data.id ? { ...c, banned: false } : c);
-      storage.saveCustomers(updated);
+      await storage.saveCustomersAsync(updated);
       return NextResponse.json({ success: true });
     }
 
