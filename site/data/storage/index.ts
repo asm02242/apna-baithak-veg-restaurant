@@ -179,6 +179,9 @@ function getSeedMenu(): MenuCategory[] {
   return [];
 }
 
+function hasNeon() { return !!(process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.NEON_DATABASE_URL); }
+
+// Keep sync for local dev; Neon uses async wrappers
 export const storage = {
   getAdmins: () => readJSON<AdminUser[]>('admins.json', DEFAULT_ADMINS),
   saveAdmins: (admins: AdminUser[]) => writeJSON('admins.json', admins),
@@ -195,7 +198,6 @@ export const storage = {
   getMenu: () => {
     const seeded = getSeedMenu();
     const menuData = readJSON<{ categories: MenuCategory[] }>('menu.json', { categories: seeded });
-    // if file exists but empty and we have seed, return seed
     if ((!menuData.categories || menuData.categories.length === 0) && seeded.length) {
       writeJSON('menu.json', { categories: seeded });
       return seeded;
@@ -203,6 +205,44 @@ export const storage = {
     return menuData.categories;
   },
   saveMenu: (categories: MenuCategory[]) => writeJSON('menu.json', { categories }),
+
+  // Async Neon-aware helpers (use when DATABASE_URL is set)
+  getAdminsAsync: async () => {
+    if (hasNeon()) { const { neonGet } = await import('@/lib/neon'); return neonGet<AdminUser[]>('admins.json', DEFAULT_ADMINS); }
+    return readJSON<AdminUser[]>('admins.json', DEFAULT_ADMINS);
+  },
+  saveAdminsAsync: async (admins: AdminUser[]) => {
+    if (hasNeon()) { const { neonSet } = await import('@/lib/neon'); await neonSet('admins.json', admins); } else writeJSON('admins.json', admins);
+    writeJSON('admins.json', admins);
+  },
+  getOffersAsync: async () => {
+    if (hasNeon()) { const { neonGet } = await import('@/lib/neon'); return neonGet<Offer[]>('offers.json', DEFAULT_OFFERS); }
+    return readJSON<Offer[]>('offers.json', DEFAULT_OFFERS);
+  },
+  saveOffersAsync: async (o: Offer[]) => { if (hasNeon()) { const { neonSet } = await import('@/lib/neon'); await neonSet('offers.json', o); } writeJSON('offers.json', o); },
+  getNewsAsync: async () => { if (hasNeon()) { const { neonGet } = await import('@/lib/neon'); return neonGet<NewsItem[]>('news.json', []); } return readJSON<NewsItem[]>('news.json', []); },
+  saveNewsAsync: async (n: NewsItem[]) => { if (hasNeon()) { const { neonSet } = await import('@/lib/neon'); await neonSet('news.json', n); } writeJSON('news.json', n); },
+  getOrdersAsync: async () => { if (hasNeon()) { const { neonGet } = await import('@/lib/neon'); return neonGet<Order[]>('orders.json', []); } return readJSON<Order[]>('orders.json', []); },
+  saveOrdersAsync: async (o: Order[]) => { if (hasNeon()) { const { neonSet } = await import('@/lib/neon'); await neonSet('orders.json', o); } writeJSON('orders.json', o); },
+  getBulkOrdersAsync: async () => { if (hasNeon()) { const { neonGet } = await import('@/lib/neon'); return neonGet<BulkOrder[]>('bulkOrders.json', DEFAULT_BULK_ORDERS); } return readJSON<BulkOrder[]>('bulkOrders.json', DEFAULT_BULK_ORDERS); },
+  saveBulkOrdersAsync: async (b: BulkOrder[]) => { if (hasNeon()) { const { neonSet } = await import('@/lib/neon'); await neonSet('bulkOrders.json', b); } writeJSON('bulkOrders.json', b); },
+  getCustomersAsync: async () => { if (hasNeon()) { const { neonGet } = await import('@/lib/neon'); return neonGet<CustomerUser[]>('customers.json', []); } return readJSON<CustomerUser[]>('customers.json', []); },
+  saveCustomersAsync: async (c: CustomerUser[]) => { if (hasNeon()) { const { neonSet } = await import('@/lib/neon'); await neonSet('customers.json', c); } writeJSON('customers.json', c); },
+  getMenuAsync: async () => {
+    const seeded = getSeedMenu();
+    if (hasNeon()) {
+      const { neonGet, neonSet } = await import('@/lib/neon');
+      const data = await neonGet<{ categories: MenuCategory[] }>('menu.json', { categories: seeded });
+      if (!data.categories || data.categories.length === 0) {
+        if (seeded.length) { await neonSet('menu.json', { categories: seeded }); return seeded; }
+      }
+      return data.categories;
+    }
+    const menuData = readJSON<{ categories: MenuCategory[] }>('menu.json', { categories: seeded });
+    if ((!menuData.categories || menuData.categories.length === 0) && seeded.length) { writeJSON('menu.json', { categories: seeded }); return seeded; }
+    return menuData.categories;
+  },
+  saveMenuAsync: async (cats: MenuCategory[]) => { if (hasNeon()) { const { neonSet } = await import('@/lib/neon'); await neonSet('menu.json', { categories: cats }); } writeJSON('menu.json', { categories: cats }); },
 };
 
 export function getNextId(prefix: string = 'id') {

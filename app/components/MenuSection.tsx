@@ -11,6 +11,16 @@ export default function MenuSection() {
   const [categories, setCategories] = useState<MenuCategory[]>(staticCategories);
   const [allItems, setAllItems] = useState<MenuItem[]>(staticItems);
 
+  const fetchMenu = async () => {
+    try {
+      const r = await fetch("/api/menu", { cache: "no-store" });
+      const d = await r.json();
+      if (Array.isArray(d.categories) && d.categories.length) {
+        setCategories(d.categories);
+        setAllItems(d.allItems ?? d.categories.flatMap((c: MenuCategory) => c.items));
+      }
+    } catch {}
+  };
   useEffect(() => {
     let cancelled = false;
     fetch("/api/menu", { cache: "no-store" })
@@ -24,21 +34,16 @@ export default function MenuSection() {
         }
       })
       .catch(() => {});
-    const onUpdate = () => {
-      fetch("/api/menu", { cache: "no-store" })
-        .then((r) => r.json())
-        .then((d) => {
-          if (Array.isArray(d.categories) && d.categories.length) {
-            setCategories(d.categories);
-            setAllItems(d.allItems ?? d.categories.flatMap((c: MenuCategory) => c.items));
-          }
-        })
-        .catch(() => {});
-    };
+    const onUpdate = () => fetchMenu();
     window.addEventListener("menu-updated", onUpdate as EventListener);
+    const onVis = () => { if (document.visibilityState === 'visible') fetchMenu(); };
+    document.addEventListener('visibilitychange', onVis);
+    const id = setInterval(fetchMenu, 15000); // poll every 15s for cross-device live sync
     return () => {
       cancelled = true;
       window.removeEventListener("menu-updated", onUpdate as EventListener);
+      document.removeEventListener('visibilitychange', onVis);
+      clearInterval(id);
     };
   }, []);
 

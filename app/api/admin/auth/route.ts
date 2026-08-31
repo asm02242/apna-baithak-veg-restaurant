@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     const { action, username, password } = await request.json();
 
     if (action === 'login') {
-      const admins = storage.getAdmins();
+      const admins = await storage.getAdminsAsync();
       const admin = admins.find(a => a.username === username && a.password === password);
       
       if (!admin) {
@@ -43,8 +43,7 @@ export async function POST(request: NextRequest) {
       if (!sessionToken) {
         return NextResponse.json({ authenticated: false });
       }
-      
-      const admins = storage.getAdmins();
+      const admins = await storage.getAdminsAsync();
       const adminId = sessionToken.split('_')[1];
       const admin = admins.find(a => a.id === adminId);
       
