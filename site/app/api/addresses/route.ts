@@ -32,17 +32,17 @@ async function ensureTables(sql: any) {
     created_at TIMESTAMPTZ DEFAULT NOW()
   )`;
   
-  -- Add new columns if they don't exist (for existing deployments)
-  ALTER TABLE addresses ADD COLUMN IF NOT EXISTS name TEXT;
-  ALTER TABLE addresses ADD COLUMN IF NOT EXISTS house_no TEXT;
-  ALTER TABLE addresses ADD COLUMN IF NOT EXISTS building_name TEXT;
-  ALTER TABLE addresses ADD COLUMN IF NOT EXISTS street TEXT;
-  ALTER TABLE addresses ADD COLUMN IF NOT EXISTS landmark TEXT;
-  ALTER TABLE addresses ADD COLUMN IF NOT EXISTS city TEXT;
-  ALTER TABLE addresses ADD COLUMN IF NOT EXISTS state TEXT;
-  ALTER TABLE addresses ADD COLUMN IF NOT EXISTS pincode TEXT;
-  ALTER TABLE addresses ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION;
-  ALTER TABLE addresses ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION;
+  // Add new columns if they don't exist (for existing deployments)
+  try { await sql`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS name TEXT`; } catch {}
+  try { await sql`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS house_no TEXT`; } catch {}
+  try { await sql`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS building_name TEXT`; } catch {}
+  try { await sql`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS street TEXT`; } catch {}
+  try { await sql`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS landmark TEXT`; } catch {}
+  try { await sql`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS city TEXT`; } catch {}
+  try { await sql`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS state TEXT`; } catch {}
+  try { await sql`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS pincode TEXT`; } catch {}
+  try { await sql`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION`; } catch {}
+  try { await sql`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION`; } catch {}
 }
 
 export async function GET(req: NextRequest) {
