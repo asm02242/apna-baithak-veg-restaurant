@@ -227,7 +227,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const r = await fetch("/api/menu", { cache: "no-store" });
       const d = await r.json();
       const allItems = d.allItems || d.categories?.flatMap((c: any) => c.items) || [];
-      const itemMap = new Map(allItems.map((it: any) => [it.id, it]));
+      const itemMap = new Map<string, { image?: string; isAvailable?: boolean; price?: number; half?: number; full?: number }>(
+        allItems.map((it: any) => [it.id, { image: it.image, isAvailable: it.isAvailable, price: it.price, half: it.half, full: it.full }])
+      );
       
       setCart((prev) => prev.map((item) => {
         const menuItem = itemMap.get(item.id);
