@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = "https://apna-baithak-vegeterian-restaurant.vercel.app";
+  const base = "https://apnabaithak.vercel.app";
   const now = new Date();
   return [
     { url: `${base}/`, lastModified: now, changeFrequency: "daily", priority: 1 },
