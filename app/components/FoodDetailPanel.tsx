@@ -25,7 +25,7 @@ export default function FoodDetailPanel() {
 
   if (!isOpen || !item) return null;
 
-  const hasVariant = item.half !== undefined && item.full !== undefined;
+  const hasVariant = item.half !== undefined && item.full !== undefined && item.half > 0 && item.full > 0;
   const halfId = `${item.id}-half`;
   const fullId = `${item.id}-full`;
   const halfInCart = cart.find((c) => c.id === halfId);
@@ -65,7 +65,7 @@ export default function FoodDetailPanel() {
                 <span className="text-black/50">{mockReviews.length} reviews • 90+ orders</span>
               </div>
               <div className="mt-3">
-                {hasVariant ? (
+                {hasVariant && item.half && item.full ? (
                   <div className="grid grid-cols-2 gap-2">
                     <div className="rounded-xl border bg-[#fff7ed] p-2">
                       <div className="text-center text-[11px] font-bold">Half</div>
@@ -150,13 +150,18 @@ export default function FoodDetailPanel() {
             <div className="rounded-xl bg-white p-3 ring-1 ring-black/5">
               <div className="text-xs font-black">Related items • {item.category}</div>
               <div className="mt-2 grid grid-cols-2 gap-2">
-                {related.map((it) => (
-                  <button key={it.id} onClick={() => openDetail(it)} className="text-left rounded-xl border bg-white p-2 hover:bg-[#fff7ed]">
-                    <img src={it.image} alt={it.name} className="h-20 w-full object-cover rounded-lg" />
-                    <div className="mt-1 line-clamp-1 text-xs font-bold">{it.name}</div>
-                    <div className="text-xs font-black text-[#ea580c]">₹{it.price}</div>
-                  </button>
-                ))}
+                {related.map((it) => {
+                  const hasVariant = it.half !== undefined && it.full !== undefined && it.half > 0 && it.full > 0;
+                  return (
+                    <button key={it.id} onClick={() => openDetail(it)} className="text-left rounded-xl border bg-white p-2 hover:bg-[#fff7ed]">
+                      <img src={it.image} alt={it.name} className="h-20 w-full object-cover rounded-lg" />
+                      <div className="mt-1 line-clamp-1 text-xs font-bold">{it.name}</div>
+                      <div className="text-xs font-black text-[#ea580c]">
+                        {hasVariant ? `Half ₹${it.half} • Full ₹${it.full}` : `₹${it.price}`}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
             <div className="h-4" />
