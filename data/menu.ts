@@ -11,6 +11,7 @@ export type MenuItem = {
   veg: boolean;
   image?: string;
   description?: string;
+  isAvailable?: boolean;
 };
 
 export type MenuCategory = {

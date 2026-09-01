@@ -18,7 +18,9 @@ async function ensureTables(sql: any) {
     user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
     name TEXT,
     phone TEXT,
-    address TEXT NOT NULL,
+    house_no TEXT,
+    building_name TEXT,
+    street TEXT,
     landmark TEXT,
     city TEXT,
     state TEXT,
@@ -29,6 +31,18 @@ async function ensureTables(sql: any) {
     is_default BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT NOW()
   )`;
+  
+  // Add new columns if they don't exist (for existing deployments)
+  try { await sql`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS name TEXT`; } catch {}
+  try { await sql`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS house_no TEXT`; } catch {}
+  try { await sql`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS building_name TEXT`; } catch {}
+  try { await sql`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS street TEXT`; } catch {}
+  try { await sql`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS landmark TEXT`; } catch {}
+  try { await sql`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS city TEXT`; } catch {}
+  try { await sql`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS state TEXT`; } catch {}
+  try { await sql`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS pincode TEXT`; } catch {}
+  try { await sql`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION`; } catch {}
+  try { await sql`ALTER TABLE addresses ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION`; } catch {}
 }
 
 export async function GET(req: NextRequest) {
@@ -37,7 +51,7 @@ export async function GET(req: NextRequest) {
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const sql = getSql();
     await ensureTables(sql);
-    const addresses = await sql`SELECT * FROM addresses WHERE user_id=${userId} ORDER BY is_default DESC, created_at DESC`;
+    const addresses = await sql`SELECT id, user_id, name, phone, house_no, building_name, street, landmark, city, state, pincode, latitude, longitude, address_type, is_default, created_at FROM addresses WHERE user_id=${userId} ORDER BY is_default DESC, created_at DESC`;
     return NextResponse.json({ addresses });
   } catch (e: any) {
     return NextResponse.json({ error: e.message || "Server error" }, { status: 500 });
@@ -54,7 +68,22 @@ export async function POST(req: NextRequest) {
     const { action } = body;
 
     if (action === "add") {
-      const { address, landmark, city, state, pincode, latitude, longitude, address_type, is_default, name, phone } = body;
+      const { 
+        address, 
+        landmark, 
+        city, 
+        state, 
+        pincode, 
+        latitude, 
+        longitude, 
+        address_type, 
+        is_default, 
+        name, 
+        phone,
+        house_no,
+        building_name,
+        street
+      } = body;
       if (!address) return NextResponse.json({ error: "address required" }, { status: 400 });
       const id = body.id || genId();
       const isDefault = Boolean(is_default);
@@ -62,14 +91,30 @@ export async function POST(req: NextRequest) {
         await sql`UPDATE addresses SET is_default=false WHERE user_id=${userId}`;
       }
       await sql`
-        INSERT INTO addresses (id, user_id, name, phone, address, landmark, city, state, pincode, latitude, longitude, address_type, is_default)
-        VALUES (${id}, ${userId}, ${name || null}, ${phone || null}, ${address}, ${landmark || null}, ${city || null}, ${state || null}, ${pincode || null}, ${latitude || null}, ${longitude || null}, ${address_type || 'home'}, ${isDefault})
+        INSERT INTO addresses (id, user_id, name, phone, house_no, building_name, street, landmark, city, state, pincode, latitude, longitude, address_type, is_default)
+        VALUES (${id}, ${userId}, ${name || null}, ${phone || null}, ${house_no || null}, ${building_name || null}, ${street || null}, ${landmark || null}, ${city || null}, ${state || null}, ${pincode || null}, ${latitude || null}, ${longitude || null}, ${address_type || 'home'}, ${isDefault})
       `;
       return NextResponse.json({ success: true, id });
     }
 
     if (action === "update") {
-      const { id, address, landmark, city, state, pincode, latitude, longitude, address_type, is_default, name, phone } = body;
+      const { 
+        id, 
+        address, 
+        landmark, 
+        city, 
+        state, 
+        pincode, 
+        latitude, 
+        longitude, 
+        address_type, 
+        is_default, 
+        name, 
+        phone,
+        house_no,
+        building_name,
+        street
+      } = body;
       if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
       const rows: any[] = await sql`SELECT id FROM addresses WHERE id=${id} AND user_id=${userId} LIMIT 1`;
       if (!rows.length) return NextResponse.json({ error: "Address not found" }, { status: 404 });
@@ -81,7 +126,9 @@ export async function POST(req: NextRequest) {
         UPDATE addresses SET
           name = COALESCE(${name ?? null}, name),
           phone = COALESCE(${phone ?? null}, phone),
-          address = COALESCE(${address ?? null}, address),
+          house_no = COALESCE(${house_no ?? null}, house_no),
+          building_name = COALESCE(${building_name ?? null}, building_name),
+          street = COALESCE(${street ?? null}, street),
           landmark = COALESCE(${landmark ?? null}, landmark),
           city = COALESCE(${city ?? null}, city),
           state = COALESCE(${state ?? null}, state),
@@ -99,6 +146,9 @@ export async function POST(req: NextRequest) {
       if (pincode !== undefined) await sql`UPDATE addresses SET pincode=${pincode} WHERE id=${id} AND user_id=${userId}`;
       if (name !== undefined) await sql`UPDATE addresses SET name=${name} WHERE id=${id} AND user_id=${userId}`;
       if (phone !== undefined) await sql`UPDATE addresses SET phone=${phone} WHERE id=${id} AND user_id=${userId}`;
+      if (house_no !== undefined) await sql`UPDATE addresses SET house_no=${house_no} WHERE id=${id} AND user_id=${userId}`;
+      if (building_name !== undefined) await sql`UPDATE addresses SET building_name=${building_name} WHERE id=${id} AND user_id=${userId}`;
+      if (street !== undefined) await sql`UPDATE addresses SET street=${street} WHERE id=${id} AND user_id=${userId}`;
       if (latitude !== undefined) await sql`UPDATE addresses SET latitude=${latitude} WHERE id=${id} AND user_id=${userId}`;
       if (longitude !== undefined) await sql`UPDATE addresses SET longitude=${longitude} WHERE id=${id} AND user_id=${userId}`;
       if (address_type !== undefined) await sql`UPDATE addresses SET address_type=${address_type} WHERE id=${id} AND user_id=${userId}`;

@@ -18,7 +18,16 @@ export default function AdminOffers() {
   const [offers, setOffers] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingOffer, setEditingOffer] = useState<any | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    label: string;
+    type: string;
+    minOrder: number;
+    value: number;
+    freeItemValue: any;
+    desc: string;
+    priority: number;
+    active: boolean;
+  }>({
     label: '',
     type: 'flat',
     minOrder: 0,
@@ -225,7 +234,7 @@ export default function AdminOffers() {
                 <button onClick={() => { setShowForm(false); resetForm(); }} className="text-xl hover:text-black/50">✕</button>
               </div>
 
-              <form onSubmit={(e) => { e.preventDefault(); saveForm(); }} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="text-xs font-black">Label *</label>
                   <input value={formData.label} onChange={(e) => setFormData({...formData, label: e.target.value})} placeholder="e.g. ₹75 OFF" className="mt-1 w-full rounded-xl border px-3 py-2.5 text-sm" required />
@@ -285,8 +294,4 @@ export default function AdminOffers() {
       </div>
     </div>
   );
-}
-
-function resetForm() {
-  // This will be called from the form's onSubmit or cancel
 }

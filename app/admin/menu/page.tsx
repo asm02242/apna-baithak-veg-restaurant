@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface Category {
   id: string;
@@ -219,6 +220,44 @@ export default function AdminMenu() {
     }
   };
 
+  const handleEditCategory = async (id: string, name: string, icon: string) => {
+    try {
+      const res = await fetch('/api/admin/menu', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'updateCategory', id, name, icon }),
+      });
+      const data = await res.json();
+      if (data.success) fetchCategories();
+    } catch (error) {
+      console.error('Edit category failed:', error);
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if (!confirm('Delete this category and all its items?')) return;
+    try {
+      await fetch(`/api/admin/menu?id=${id}&type=category`, { method: 'DELETE' });
+      await fetchCategories();
+    } catch (error) {
+      console.error('Delete category failed:', error);
+    }
+  };
+
+  const handleCategoryEdit = (cat: any) => {
+    const newName = prompt('Edit category name:', cat.name);
+    const newIcon = prompt('Edit category icon (emoji):', cat.icon);
+    if (newName && newName !== cat.name) {
+      handleEditCategory(cat.id, newName, newIcon || cat.icon);
+    }
+  };
+
+  const handleCategoryDelete = (cat: any) => {
+    if (confirm(`Delete category "${cat.name}" and all its items?`)) {
+      handleDeleteCategory(cat.id);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#f7f7f7] flex items-center justify-center">
@@ -242,9 +281,13 @@ export default function AdminMenu() {
           <h2 className="font-black text-lg mb-3">Categories</h2>
           <div className="flex flex-wrap gap-2 mb-3">
             {categories.map((cat) => (
-              <Link key={cat.id} href={`/admin/menu?cat=${cat.id}`} className={`rounded-full px-3 py-1.5 text-sm font-bold ${selectedCategory === cat.id ? 'bg-[#ea580c] text-white' : 'bg-white border'}`}>
-                {cat.icon} {cat.name} ({cat.items?.length || 0})
-              </Link>
+              <div key={cat.id} className="flex items-center gap-1">
+                <Link href={`/admin/menu?cat=${cat.id}`} className={`rounded-full px-3 py-1.5 text-sm font-bold ${selectedCategory === cat.id ? 'bg-[#ea580c] text-white' : 'bg-white border'}`}>
+                  {cat.icon} {cat.name} ({cat.items?.length || 0})
+                </Link>
+                <button onClick={() => handleCategoryEdit(cat)} className="p-1.5 text-xs hover:bg-[#ea580c]/10 rounded text-[#ea580c]" title="Edit">✏️</button>
+                <button onClick={() => handleCategoryDelete(cat)} className="p-1.5 text-xs hover:bg-red-500/10 rounded text-red-600" title="Delete">🗑️</button>
+              </div>
             ))}
           </div>
           <div className="flex gap-2">
@@ -362,7 +405,7 @@ export default function AdminMenu() {
                           <div className="text-xs mt-1">or click to select</div>
                         </div>
                       )}
-                      <input type="file" accept="image/*" onChange={(e) => e.target.files[0] && handleImageUpload(e.target.files[0])} className="hidden" id="imageUpload" />
+                      <input type="file" accept="image/*" onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) handleImageUpload(f); }} className="hidden" id="imageUpload" />
                     </div>
                     <input value={formData.image} onChange={(e) => setFormData({...formData, image: e.target.value})} className="mt-2 w-full rounded-xl border px-3 py-2 text-xs" placeholder="Or paste image URL" />
                   </div>

@@ -1,48 +1,36 @@
-# APNA BAITHAK — Pure Veg Restaurant Website
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Next.js 16 + TypeScript + Tailwind CSS 4 — Premium modern Indian restaurant design.
+## Getting Started
 
-**Live sections:** Home → Menu → Cart → About → Gallery → Contact
+First, run the development server:
 
-### Quick Start (5 hours window — run overnight)
-1. Open PowerShell in this folder `C:\Users\Abhig\OneDrive\Documents\RESTAURANT`
-2. Run:
-```
-npm install
+```bash
 npm run dev
-```
-Then open http://localhost:3000
-
-> Network is slow to registry.npmjs.org (one tarball took 274s). `npm install` may take 30-60 min. Leave it running overnight — it will finish. All source files are already ready and verified.
-
-### Edit Prices
-Edit `data/menu.ts` — all Half/Full prices in one file. Example:
-```ts
-item("Malai Chaap", "roasted-chaap", "Roasted Chaap", 290, { half: 150, full: 290 })
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-### Edit Phone / Address / Hours
-Edit `lib/site.ts`:
-```ts
-phone: "8299751213"  // only this number, other removed as you requested
-address, hours, mapsEmbed, etc.
-```
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-### Add Real Photos
-- Logo: `public/images/logo.png`
-- Gallery: `public/images/gallery/` — drop your 11 store photos there
-- Menu: `public/images/menu/`
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-Gallery currently shows placeholders — replace with your photos.
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-### Cart
-Working cart with Add + / quantity, total, WhatsApp checkout (no payment gateway). Uses `app/context/CartContext.tsx` with CartProvider wrapping app — no runtime errors.
+## Learn More
 
-### Build for production
-```
-npm run build
-npm start
-```
+To learn more about Next.js, take a look at the following resources:
 
----
-Made for APNA BAITHAK, Eldeco City, Lucknow. Pure Veg • Fresh Taste.
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

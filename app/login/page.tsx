@@ -5,16 +5,17 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, loginWithPhone } = useAuth();
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
+  const [mode, setMode] = useState<"email" | "phone">("email");
 
   const handle = (e: React.FormEvent) => {
     e.preventDefault();
     setErr("");
-    const res = login(email, password);
+    const res = mode === "phone" ? loginWithPhone(identifier, password) : login(identifier, password);
     if (!res.ok) return setErr(res.msg!);
     router.push("/");
   };
@@ -37,10 +38,16 @@ export default function LoginPage() {
           <h2 className="font-display text-2xl font-black">Login</h2>
           <p className="text-xs text-black/60 mt-1">Access your wishlist & saved addresses.</p>
           {err && <div className="mt-3 rounded-xl bg-red-50 border border-red-200 px-3 py-2 text-xs font-bold text-red-600">{err}</div>}
+          
+          <div className="mt-2 flex gap-2">
+            <button type="button" onClick={() => { setMode("email"); setErr(""); }} className={`flex-1 rounded-xl px-3 py-2 text-sm font-bold ${mode === "email" ? "bg-[#ea580c] text-white" : "bg-[#f7f7f7] text-black/60"}`}>Email</button>
+            <button type="button" onClick={() => { setMode("phone"); setErr(""); }} className={`flex-1 rounded-xl px-3 py-2 text-sm font-bold ${mode === "phone" ? "bg-[#ea580c] text-white" : "bg-[#f7f7f7] text-black/60"}`}>Phone</button>
+          </div>
+
           <div className="mt-4 space-y-3">
             <div>
-              <label className="text-xs font-black">Email *</label>
-              <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" type="email" className="mt-1 w-full rounded-xl border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#ea580c]/20" />
+              <label className="text-xs font-black">{mode === "phone" ? "Phone *" : "Email *"}</label>
+              <input value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder={mode === "phone" ? "98xxxxxxxx" : "you@example.com"} type={mode === "phone" ? "tel" : "email"} className="mt-1 w-full rounded-xl border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#ea580c]/20" />
             </div>
             <div>
               <label className="text-xs font-black">Password *</label>
@@ -48,7 +55,7 @@ export default function LoginPage() {
             </div>
             <button type="submit" className="w-full rounded-full bg-[#1c0a00] py-3 text-sm font-black text-white hover:bg-black mt-2">Login →</button>
             <div className="text-center text-xs">No account? <Link href="/signup" className="font-bold text-[#ea580c]">Sign up</Link></div>
-            <div className="text-center text-xs font-bold text-black/40">Demo: Try signup first — no email verification needed.</div>
+            <div className="text-center text-xs font-bold text-black/40">One account per phone number. {mode === "phone" ? "Login with phone + password." : "Login with email + password."}</div>
           </div>
         </form>
       </div>

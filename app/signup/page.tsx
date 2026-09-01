@@ -17,7 +17,9 @@ export default function SignupPage() {
   const handle = (e: React.FormEvent) => {
     e.preventDefault();
     setErr("");
-    if (!name.trim() || !email.trim() || !password.trim()) return setErr("All fields required");
+    if (!name.trim() || !email.trim() || !phone.trim() || !password.trim()) return setErr("All fields required");
+    const p = phone.trim().replace(/\D/g, '');
+    if (p.length < 10) return setErr("Enter valid 10-digit phone number");
     const res = signup({ name, email, password, phone });
     if (!res.ok) return setErr(res.msg!);
     setOk("Account created! Redirecting…");
@@ -57,8 +59,8 @@ export default function SignupPage() {
               <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" type="email" className="mt-1 w-full rounded-xl border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#ea580c]/20" />
             </div>
             <div>
-              <label className="text-xs font-black">Phone</label>
-              <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="98xxxxxxxx" className="mt-1 w-full rounded-xl border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#ea580c]/20" />
+              <label className="text-xs font-black">Phone *</label>
+              <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="98xxxxxxxx" className="mt-1 w-full rounded-xl border px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#ea580c]/20" required />
             </div>
             <div>
               <label className="text-xs font-black">Password * (6+ chars)</label>

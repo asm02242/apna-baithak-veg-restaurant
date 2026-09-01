@@ -187,7 +187,7 @@ export default function AdminNews() {
                 <button onClick={() => { setShowForm(false); resetForm(); }} className="text-xl hover:text-black/50">✕</button>
               </div>
 
-              <form onSubmit={(e) => { e.preventDefault(); saveForm(); }} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="text-xs font-black">Title *</label>
                   <input value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} placeholder="News title" className="mt-1 w-full rounded-xl border px-3 py-2.5 text-sm" required />

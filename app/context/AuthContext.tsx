@@ -18,6 +18,7 @@ type AuthContextType = {
   users: User[];
   signup: (data: { name: string; email: string; password: string; phone?: string }) => { ok: boolean; msg?: string };
   login: (email: string, password: string) => { ok: boolean; msg?: string };
+  loginWithPhone: (phone: string, password: string) => { ok: boolean; msg?: string };
   logout: () => void;
   toggleWishlist: (id: string) => void;
   toggleFavourite: (id: string) => void;
@@ -71,6 +72,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signup = ({ name, email, password, phone }: { name: string; email: string; password: string; phone?: string }) => {
     const e = email.toLowerCase().trim();
     if (users.some((u) => u.email.toLowerCase() === e)) return { ok: false, msg: "Email already registered" };
+    if (phone) {
+      const p = phone.trim().replace(/\D/g, '');
+      if (p.length >= 10) {
+        if (users.some((u) => u.phone?.replace(/\D/g, '') === p)) return { ok: false, msg: "Phone number already registered" };
+      }
+    }
     if (password.length < 6) return { ok: false, msg: "Password must be 6+ characters" };
     const newUser: User = { id: Date.now().toString(), name: name.trim(), email: e, password, phone, wishlist: [], favourites: [], addresses: [{ id: "addr1", label: "Home", full: "Eldeco City, Lucknow - Home" }] };
     const next = [...users, newUser];
@@ -82,6 +89,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const e = email.toLowerCase().trim();
     const found = users.find((u) => u.email.toLowerCase() === e && u.password === password);
     if (!found) return { ok: false, msg: "Invalid email or password" };
+    localStorage.setItem("apna-current-user", JSON.stringify(found));
+    setUser(found);
+    return { ok: true };
+  };
+
+  const loginWithPhone = (phone: string, password: string) => {
+    const p = phone.trim().replace(/\D/g, '');
+    const found = users.find((u) => u.phone?.replace(/\D/g, '') === p && u.password === password);
+    if (!found) return { ok: false, msg: "Invalid phone or password" };
     localStorage.setItem("apna-current-user", JSON.stringify(found));
     setUser(found);
     return { ok: true };
@@ -139,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("wishlist-guest-update", h);
   }, []);
 
-  return <AuthContext.Provider value={{ user, users, signup, login, logout, toggleWishlist, toggleFavourite, addAddress, removeAddress, isWishlisted, isFavourited }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, users, signup, login, loginWithPhone, logout, toggleWishlist, toggleFavourite, addAddress, removeAddress, isWishlisted, isFavourited }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

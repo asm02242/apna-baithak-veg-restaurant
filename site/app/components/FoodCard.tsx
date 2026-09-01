@@ -16,7 +16,7 @@ const emojiMap: Record<string, string> = {
 };
 
 function getImage(item: MenuItem) {
-  if (item.image) return item.image;
+  if (item.image) return `${item.image}?v=${Date.now()}`;
   const n = item.name.toLowerCase();
   if (n.includes("paneer") || n.includes("shahi") || n.includes("rogan josh") || n.includes("kadai"))
     return "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400&h=300&fit=crop";

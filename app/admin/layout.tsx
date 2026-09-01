@@ -1,14 +1,22 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [authenticated, setAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const isLoginPage = pathname === '/admin/login';
+
   useEffect(() => {
+    if (isLoginPage) {
+      setLoading(false);
+      setAuthenticated(false);
+      return;
+    }
     const checkAuth = async () => {
       try {
         const res = await fetch('/api/admin/auth', {
@@ -25,7 +33,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }
     };
     checkAuth();
-  }, []);
+  }, [isLoginPage]);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/admin/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'logout' }),
+      });
+    } catch {
+      // ignore
+    }
+    router.push('/admin/login');
+  };
 
   if (loading) {
     return (
@@ -35,8 +56,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!authenticated) {
-    return <div className="min-h-screen" />;
+  if (!authenticated && !isLoginPage) {
+    router.push('/admin/login');
+    return null;
+  }
+
+  if (isLoginPage) {
+    return <>{children}</>;
   }
 
   return (
@@ -47,10 +73,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#ea580c] text-white">AB</span>
             Admin Panel
           </Link>
-          <form action="/api/admin/auth" method="POST" className="inline">
-            <input type="hidden" name="action" value="logout" />
-            <button type="submit" className="rounded-xl bg-[#ea580c] px-4 py-2 text-sm font-black text-white hover:bg-[#c2410c]">Logout</button>
-          </form>
+          <button onClick={handleLogout} className="rounded-xl bg-[#ea580c] px-4 py-2 text-sm font-black text-white hover:bg-[#c2410c]">Logout</button>
         </div>
       </header>
 
