@@ -8,6 +8,11 @@ export type CartItem = {
   quantity: number;
   image?: string;
   category?: string;
+  variant?: string; // "half" | "full" | undefined
+  isAvailable?: boolean;
+  menuPrice?: number; // current price from menu for unavailable check
+  menuHalf?: number;
+  menuFull?: number;
 };
 
 export type DeliveryType = "delivery" | "takeaway" | "dinein";
@@ -127,6 +132,8 @@ type CartContextType = {
   isCartOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
+  refreshCartImages: () => Promise<void>;
+  unavailableItems: CartItem[];
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -213,6 +220,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("apna-baithak-offer");
     } catch {}
   };
+
+  // Refresh cart images and availability from menu API
+  const refreshCartImages = async () => {
+    try {
+      const r = await fetch("/api/menu", { cache: "no-store" });
+      const d = await r.json();
+      const allItems = d.allItems || d.categories?.flatMap((c: any) => c.items) || [];
+      const itemMap = new Map(allItems.map((it: any) => [it.id, it]));
+      
+      setCart((prev) => prev.map((item) => {
+        const menuItem = itemMap.get(item.id);
+        if (!menuItem) return item;
+        return {
+          ...item,
+          image: menuItem.image,
+          isAvailable: menuItem.isAvailable !== false,
+          menuPrice: menuItem.price,
+          menuHalf: menuItem.half,
+          menuFull: menuItem.full,
+        };
+      }));
+    } catch (e) {
+      console.error("Failed to refresh cart images:", e);
+    }
+  };
+
+  // Check for unavailable items in cart
+  const unavailableItems = useMemo(() => {
+    return cart.filter((item) => item.isAvailable === false);
+  }, [cart]);
 
   const subtotal = useMemo(() => cart.reduce((sum, i) => sum + i.price * i.quantity, 0), [cart]);
   const count = useMemo(() => cart.reduce((sum, i) => sum + i.quantity, 0), [cart]);
