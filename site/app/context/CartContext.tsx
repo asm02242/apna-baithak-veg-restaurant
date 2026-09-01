@@ -361,6 +361,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         isCartOpen,
         openCart,
         closeCart,
+        refreshCartImages,
+        unavailableItems,
       }}
     >
       {children}
