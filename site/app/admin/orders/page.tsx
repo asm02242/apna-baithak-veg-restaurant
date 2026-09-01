@@ -29,9 +29,6 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
-  const [partners, setPartners] = useState<any[]>([]);
-  const [selectedPartner, setSelectedPartner] = useState('');
-  const [assigning, setAssigning] = useState(false);
 
   const statusColors: Record<string, string> = {
     pending: 'bg-[#ea580c]/20 text-[#ea580c]',
@@ -45,77 +42,18 @@ export default function AdminOrders() {
 
   useEffect(() => {
     fetchOrders();
-    fetchPartners();
   }, [filter]);
-
-  const fetchPartners = async () => {
-    try {
-      const r = await fetch('/api/admin/delivery-partners', { cache: 'no-store' });
-      const d = await r.json();
-      if (d.partners) setPartners(d.partners.filter((p: any) => p.is_active));
-    } catch {}
-  };
 
   const fetchOrders = async () => {
     try {
-      // Try Neon orders first (customer orders), fallback to legacy admin orders
-      let data: any = null;
-      try {
-        const r2 = await fetch('/api/orders', { cache: 'no-store' });
-        if (r2.ok) {
-          const d2 = await r2.json();
-          if (Array.isArray(d2.orders) && d2.orders.length) {
-            // Map Neon orders to admin Order type for display
-            const mapped = d2.orders.map((o: any) => ({
-              id: o.id,
-              userId: o.user_id,
-              items: (o.items || []).map((it: any) => ({ id: it.menu_item_id || it.combo_id || it.id, name: it.name, price: it.unit_price, quantity: it.quantity, image: '' })),
-              subtotal: o.subtotal,
-              discount: o.discount || 0,
-              deliveryFee: o.delivery_fee || 0,
-              handlingFee: 5,
-              smallCartFee: 0,
-              tip: 0,
-              grandTotal: o.total,
-              deliveryType: 'delivery' as const,
-              address: o.address,
-              phone: o.phone,
-              name: o.customer_name,
-              slot: 'ASAP',
-              payment: (o.payment_method === 'online' ? 'razorpay' : o.payment_method) as any,
-              status: (o.order_status?.toLowerCase() as any) || 'pending',
-              createdAt: o.created_at,
-              offerApplied: o.offer_id ? { id: o.offer_id, label: o.offer_id, discount: o.discount } as any : undefined,
-              paymentStatus: o.payment_status,
-            }));
-            data = { orders: mapped };
-          }
-        }
-      } catch {}
-      if (!data?.orders?.length) {
-        const res = await fetch(`/api/admin/orders?status=${filter}&limit=100`);
-        data = await res.json();
-      }
+      const res = await fetch(`/api/admin/orders?status=${filter}&limit=100`);
+      const data = await res.json();
       setOrders(data.orders || []);
     } catch (error) {
       console.error('Failed to fetch orders:', error);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleAssign = async () => {
-    if (!selectedOrder || !selectedPartner) return;
-    setAssigning(true);
-    try {
-      const r = await fetch('/api/delivery/assignment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'assign', order_id: selectedOrder.id, delivery_partner_id: selectedPartner }) });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error || 'Assign failed');
-      alert(`Assigned to ${partners.find(p=>p.id===selectedPartner)?.name} • OTP: ${d.otp||'sent'}`);
-      setSelectedOrder(null);
-    } catch (e: any) {
-      alert(e.message);
-    } finally { setAssigning(false); }
   };
 
   const handleStatusChange = async (orderId: string, newStatus: Order['status']) => {
@@ -286,18 +224,6 @@ export default function AdminOrders() {
                     <div className="text-xs font-bold text-black/50">Grand Total</div>
                     <div className="text-2xl font-black text-[#ea580c]">₹{selectedOrder.grandTotal}</div>
                   </div>
-                </div>
-
-                <div className="rounded-xl bg-[#fff7ed] p-3 ring-1 ring-black/5">
-                  <div className="text-xs font-black">Delivery Partner</div>
-                  <div className="mt-2 flex gap-2">
-                    <select value={selectedPartner} onChange={e=>setSelectedPartner(e.target.value)} className="flex-1 rounded-xl border bg-white px-3 py-2 text-sm">
-                      <option value="">Select Partner (active only)</option>
-                      {partners.map((p:any)=><option key={p.id} value={p.id}>{p.name} • {p.phone} {p.is_online?'● Online':''}</option>)}
-                    </select>
-                    <button onClick={handleAssign} disabled={!selectedPartner||assigning} className="rounded-xl bg-[#1c0a00] px-4 py-2 text-sm font-black text-white disabled:opacity-50">{assigning?'Assigning…':'Assign Delivery'}</button>
-                  </div>
-                  <div className="mt-2 text-[11px] text-black/50">Only active partners shown • OTP will be generated on assign</div>
                 </div>
 
                 {selectedOrder.offerApplied && (
