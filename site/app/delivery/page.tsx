@@ -96,7 +96,7 @@ export default function DeliveryDashboard(){
           <div className="text-sm font-black">History — Completed Today</div>
           {lists.completed.length===0? <div className="mt-3 text-sm text-black/50">No completed deliveries yet.</div> : lists.completed.slice(0,5).map(a=>(
             <div key={a.id} className="mt-3 flex justify-between rounded-xl bg-[#f7f7f7] p-3">
-              <div><div className="text-sm font-bold">#{a.order_id.slice(-6)} • {a.customer_name}</div><div className="text-xs text-black/50">{new Date(a.updated_at).toLocaleString()}</div></div>
+              <div><div className="text-sm font-bold">#{a.order_id.slice(-6)} • {a.customer_name}</div><div className="text-xs text-black/50">{new Date(a.updated_at || a.assigned_at || Date.now()).toLocaleString()}</div></div>
               <div className="text-sm font-black">₹{a.total}</div>
             </div>
           ))}
