@@ -36,27 +36,15 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-3">
-                <a href={`tel:${SITE.phone}`} className="flex items-center gap-3 rounded-2xl bg-[#1c0a00] p-4 text-white hover:bg-black transition">
-                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-[#1c0a00] shrink-0">📞</span>
-                  <span><div className="text-xs font-bold opacity-80">Call Primary</div><div className="text-sm font-black">{SITE.phoneDisplay}</div><div className="text-[11px] opacity-70">Tap to call</div></span>
-                </a>
-                <a href={`tel:${SITE.phoneSecondary}`} className="flex items-center gap-3 rounded-2xl bg-white p-4 ring-1 ring-black/10 hover:bg-[#fff7ed] transition">
-                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#fff7ed] shrink-0">📞</span>
-                  <span><div className="text-xs font-bold text-black/60">Call Alternate</div><div className="text-sm font-black text-[#1c0a00]">{SITE.phoneDisplaySecondary}</div><div className="text-[11px] text-black/50">Tap to call</div></span>
-                </a>
-              </div>
+              <a href={`tel:${SITE.phone}`} className="flex items-center gap-3 rounded-2xl bg-[#1c0a00] p-4 text-white hover:bg-black transition">
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-[#1c0a00] shrink-0">📞</span>
+                <span><div className="text-xs font-bold opacity-80">Call Primary</div><div className="text-sm font-black">{SITE.phoneDisplay}</div><div className="text-[11px] opacity-70">Tap to call</div></span>
+              </a>
 
-              <div className="grid sm:grid-cols-2 gap-3">
-                <a href={`https://wa.me/91${SITE.whatsapp}?text=Hi%20Apna%20Baithak%2C%20I%20want%20to%20order`} target="_blank" className="flex items-center gap-3 rounded-2xl bg-[#16a34a] p-4 text-white hover:bg-[#15803d] transition">
-                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-[#16a34a] shrink-0">💬</span>
-                  <span><div className="text-xs font-bold opacity-90">WhatsApp</div><div className="text-sm font-bold">Chat to order</div><div className="text-[11px] opacity-80">Quick response</div></span>
-                </a>
-                <a href={`https://wa.me/91${SITE.whatsappSecondary}?text=Hi%20Apna%20Baithak%2C%20I%20want%20to%20order`} target="_blank" className="flex items-center gap-3 rounded-2xl bg-white p-4 ring-1 ring-black/10 hover:bg-[#fff7ed] transition">
-                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#fff7ed] shrink-0">💬</span>
-                  <span><div className="text-xs font-bold text-black/60">WhatsApp Alt</div><div className="text-sm font-black text-[#1c0a00]">Message</div><div className="text-[11px] text-black/50">{SITE.whatsappSecondary}</div></span>
-                </a>
-              </div>
+              <a href={`https://wa.me/91${SITE.whatsapp}?text=Hi%20Apna%20Baithak%2C%20I%20want%20to%20order`} target="_blank" className="flex items-center gap-3 rounded-2xl bg-[#16a34a] p-4 text-white hover:bg-[#15803d] transition">
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-[#16a34a] shrink-0">💬</span>
+                <span><div className="text-xs font-bold opacity-90">WhatsApp</div><div className="text-sm font-bold">Chat to order</div><div className="text-[11px] opacity-80">Quick response</div></span>
+              </a>
 
               <div className="flex items-center gap-3 rounded-2xl bg-white p-4 ring-1 ring-black/10">
                 <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#fff7ed] shrink-0">⏰</span>

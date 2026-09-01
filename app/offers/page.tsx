@@ -237,7 +237,7 @@ export default function OffersPage() {
               <li>All offers & coupons are validated against live data — expired or inactive ones are hidden.</li>
               <li>Only one offer/coupon per order; the best eligible offer can be selected in cart.</li>
               <li>Free-item offers reserve an item worth up to the stated value — shown at checkout.</li>
-              <li>Questions? Call <a href={`tel:${SITE.phone}`} className="underline font-bold">{SITE.phoneDisplay}</a> or <a href={`tel:${SITE.phoneSecondary}`} className="underline font-bold">{SITE.phoneDisplaySecondary}</a> • WhatsApp <a href={`https://wa.me/91${SITE.whatsapp}`} target="_blank" className="underline font-bold">Chat</a>.</li>
+              <li>Questions? Call <a href={`tel:${SITE.phone}`} className="underline font-bold">{SITE.phoneDisplay}</a> • WhatsApp <a href={`https://wa.me/91${SITE.whatsapp}`} target="_blank" className="underline font-bold">Chat</a>.</li>
             </ul>
           </div>
         </section>

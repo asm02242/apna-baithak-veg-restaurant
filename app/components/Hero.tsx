@@ -18,7 +18,6 @@ export default function Hero() {
               <a href="#menu" className="inline-flex items-center justify-center rounded-full bg-[#ea580c] px-6 py-3 text-sm font-extrabold text-white shadow hover:bg-[#c2410c] transition">View Menu →</a>
               <a href="#contact" className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-extrabold text-[#1c0a00] hover:bg-[#ffedd5] transition">Order / Contact</a>
               <a href={`tel:${SITE.phone}`} className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-bold text-white hover:bg-white/15 transition">Call {SITE.phoneDisplay}</a>
-              <a href={`tel:${SITE.phoneSecondary}`} className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-bold text-white hover:bg-white/15 transition">Call {SITE.phoneDisplaySecondary}</a>
             </div>
             <div className="mt-6 flex flex-wrap items-center gap-3 text-xs">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-[#16a34a] px-3 py-1.5 font-bold text-white">● Pure Veg</span>
@@ -56,9 +55,8 @@ export default function Hero() {
                   <div className="text-xs tracking-widest text-[#fed7aa]">OPEN DAILY</div>
                   <div className="font-display text-lg font-bold">7:30 AM – 10:00 PM</div>
                   <div className="text-xs text-white/70">Breakfast • Lunch • Dinner</div>
-                  <div className="mt-3 flex gap-2">
-                    <a href={`tel:${SITE.phone}`} className="flex-1 inline-flex w-full justify-center rounded-full bg-[#ea580c] py-2 text-sm font-bold">Call {SITE.phoneDisplay}</a>
-                    <a href={`tel:${SITE.phoneSecondary}`} className="flex-1 inline-flex w-full justify-center rounded-full border bg-white/10 py-2 text-sm font-bold text-white hover:bg-white/20">Call {SITE.phoneDisplaySecondary}</a>
+                  <div className="mt-3">
+                    <a href={`tel:${SITE.phone}`} className="flex w-full justify-center rounded-full bg-[#ea580c] py-2.5 text-sm font-bold">Call {SITE.phoneDisplay}</a>
                   </div>
                 </div>
               </div>

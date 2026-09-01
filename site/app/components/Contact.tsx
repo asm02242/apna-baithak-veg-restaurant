@@ -16,17 +16,9 @@ export default function Contact() {
               <div className="grid h-10 w-10 place-items-center rounded-xl bg-white text-[#1c0a00]">📞</div>
               <div><div className="text-sm font-bold">Phone</div><div className="text-sm">{SITE.phoneDisplay} • Tap to call</div></div>
             </a>
-            <a href={`tel:${SITE.phoneSecondary}`} className="flex items-center gap-3 rounded-2xl border bg-white p-4 text-[#1c0a00] hover:bg-[#fff7ed]">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#fff7ed]">📞</div>
-              <div><div className="text-sm font-bold">Phone (Alt)</div><div className="text-sm">{SITE.phoneDisplaySecondary} • Tap to call</div></div>
-            </a>
             <a href={`https://wa.me/91${SITE.whatsapp}?text=Hi%20Apna%20Baithak%2C%20I%20want%20to%20order`} target="_blank" className="flex items-center gap-3 rounded-2xl bg-[#16a34a] p-4 text-white hover:bg-[#15803d]">
               <div className="grid h-10 w-10 place-items-center rounded-xl bg-white text-[#16a34a]">💬</div>
               <div><div className="text-sm font-bold">WhatsApp</div><div className="text-sm">Chat to order • wa.me/91{SITE.whatsapp}</div></div>
-            </a>
-            <a href={`https://wa.me/91${SITE.whatsappSecondary}?text=Hi%20Apna%20Baithak%2C%20I%20want%20to%20order`} target="_blank" className="flex items-center gap-3 rounded-2xl border bg-white p-4 text-[#16a34a] hover:bg-[#f0fdf4]">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#f0fdf4]">💬</div>
-              <div><div className="text-sm font-bold">WhatsApp (Alt)</div><div className="text-sm">Chat to order • wa.me/91{SITE.whatsappSecondary}</div></div>
             </a>
             <div className="flex items-center gap-3 rounded-2xl bg-white p-4 ring-1 ring-black/10">
               <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#fff7ed]">⏰</div>

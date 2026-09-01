@@ -636,10 +636,7 @@ export default function CheckoutPage() {
             <h2 className="mt-4 text-2xl font-black">Order placed!</h2>
             <div className="mt-2 inline-flex rounded-full bg-[#facc15] px-3 py-1 text-xs font-black">#{orderId}</div>
             <div className="mt-3 text-sm text-black/60">Thank you {name || "guest"}! Your order for ₹{grandTotalWithCoupon} is confirmed. Order is saved to Neon and WhatsApp.</div>
-            <div className="mt-5 grid grid-cols-2 gap-2">
-              <a href={`https://wa.me/91${SITE.whatsapp}?text=${waText}`} target="_blank" className="rounded-full bg-[#16a34a] py-3 text-sm font-black text-white">WhatsApp</a>
-              <a href={`https://wa.me/91${SITE.whatsappSecondary}?text=${waText}`} target="_blank" className="rounded-full border bg-white py-3 text-sm font-black text-[#16a34a]">Alt WhatsApp</a>
-            </div>
+            <a href={`https://wa.me/91${SITE.whatsapp}?text=${waText}`} target="_blank" className="mt-5 block rounded-full bg-[#16a34a] py-3 text-center text-sm font-black text-white">WhatsApp</a>
             <button onClick={handleDone} className="mt-2 w-full rounded-full border bg-white py-3 text-sm font-bold">Done • Continue shopping</button>
             <Link href="/orders" className="mt-2 inline-block text-xs font-bold text-[#ea580c] hover:underline">View My Orders →</Link>
           </div>

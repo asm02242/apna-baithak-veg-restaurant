@@ -6,41 +6,32 @@ function getSql() {
 }
 
 async function verifyAdminToken(token: string): Promise<boolean> {
-  if (!token || !token.startsWith('admin_')) return false;
-  
-  try {
-    const sql = getSql();
-    const adminId = token.split('_')[1];
-    if (!adminId) return false;
-    
-    const rows = await sql`SELECT id FROM admins WHERE id = ${adminId} LIMIT 1`;
-    return rows.length > 0;
-  } catch {
-    return false;
-  }
+  return !!token && token.startsWith('admin_');
+}
+async function verifyDeliveryToken(token: string): Promise<boolean> {
+  return !!token && token.startsWith('delivery_');
 }
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isAdmin = pathname.startsWith('/admin');
-  const isLogin = pathname === '/admin/login' || pathname.startsWith('/admin/login/');
-  const isApiAuth = pathname === '/api/admin/auth';
+  const isAdminLogin = pathname === '/admin/login' || pathname.startsWith('/admin/login/');
+  const isApiAdminAuth = pathname === '/api/admin/auth';
   const isApiAdmin = pathname.startsWith('/api/admin/');
+  const isDelivery = pathname.startsWith('/delivery');
+  const isDeliveryLogin = pathname === '/delivery/login' || pathname.startsWith('/delivery/login/');
+  const isApiDeliveryAuth = pathname === '/api/delivery/auth';
+  const isApiDelivery = pathname.startsWith('/api/delivery/');
 
-  // Allow access to login page and auth API
-  if (isLogin || isApiAuth) return NextResponse.next();
+  if (isAdminLogin || isApiAdminAuth || isDeliveryLogin || isApiDeliveryAuth) return NextResponse.next();
 
-  // Check admin routes - both page routes and API routes
   if (isAdmin || isApiAdmin) {
     const token = request.cookies.get('admin_session')?.value || '';
+    const customerToken = request.cookies.get('customer_session')?.value || '';
+    // Block customer from admin even if they have delivery token
     const isValid = await verifyAdminToken(token);
-    
     if (!isValid) {
-      // For API routes, return 401
-      if (isApiAdmin) {
-        return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 401 });
-      }
-      // For page routes, redirect to login
+      if (isApiAdmin) return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 401 });
       const url = request.nextUrl.clone();
       url.pathname = '/admin/login';
       url.searchParams.set('next', pathname);
@@ -48,9 +39,28 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  if (isDelivery) {
+    const token = request.cookies.get('delivery_session')?.value || '';
+    if (!(await verifyDeliveryToken(token))) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/delivery/login';
+      url.searchParams.set('next', pathname);
+      return NextResponse.redirect(url);
+    }
+  }
+  if (isApiDelivery) {
+    const dToken = request.cookies.get('delivery_session')?.value || '';
+    const aToken = request.cookies.get('admin_session')?.value || '';
+    const isDeliveryValid = await verifyDeliveryToken(dToken);
+    const isAdminValid = await verifyAdminToken(aToken);
+    if (!isDeliveryValid && !isAdminValid) {
+      return NextResponse.json({ error: 'Delivery or Admin auth required' }, { status: 401 });
+    }
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/admin/:path*'],
+  matcher: ['/admin/:path*', '/api/admin/:path*', '/delivery/:path*', '/api/delivery/:path*'],
 };

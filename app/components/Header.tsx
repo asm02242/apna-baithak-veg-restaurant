@@ -172,9 +172,8 @@ export default function Header() {
               </Link>
             </div>
             {SITE.phone && (
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <a href={`tel:${SITE.phone}`} className="rounded-full bg-[#1c0a00] py-2.5 text-center text-xs font-bold text-white">{SITE.phoneDisplay}</a>
-                <a href={`tel:${SITE.phoneSecondary}`} className="rounded-full border bg-white py-2.5 text-center text-xs font-bold">{SITE.phoneDisplaySecondary}</a>
+              <div className="mt-3">
+                <a href={`tel:${SITE.phone}`} className="block rounded-full bg-[#1c0a00] py-2.5 text-center text-xs font-bold text-white">{SITE.phoneDisplay} • Tap to call</a>
               </div>
             )}
             {mounted && !user ? (

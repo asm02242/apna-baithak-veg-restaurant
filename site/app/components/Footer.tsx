@@ -20,13 +20,12 @@ export default function Footer() {
               <a href="#gallery" className="hover:text-white">Gallery</a>
               <a href="#contact" className="hover:text-white">Contact</a>
               <a href={`tel:${SITE.phone}`} className="hover:text-white">Call Now</a>
-              <a href={`tel:${SITE.phoneSecondary}`} className="hover:text-white">Call Now</a>
             </div>
           </div>
           <div>
             <div className="font-semibold text-white">Contact</div>
             <p className="mt-3 text-sm text-[#ffedd5]/80">{SITE.fullAddress}</p>
-            <p className="mt-2 text-sm"><a href={`tel:${SITE.phone}`} className="font-bold text-white hover:underline">{SITE.phoneDisplay}</a> • <a href={`tel:${SITE.phoneSecondary}`} className="font-bold text-white hover:underline">{SITE.phoneDisplaySecondary}</a> • {SITE.hours}</p>
+            <p className="mt-2 text-sm"><a href={`tel:${SITE.phone}`} className="font-bold text-white hover:underline">{SITE.phoneDisplay}</a> • {SITE.hours}</p>
             <p className="mt-1 text-xs text-[#fed7aa]">Bulk Order • Home Delivery • Tiffin Service</p>
           </div>
         </div>

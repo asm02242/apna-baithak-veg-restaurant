@@ -19,7 +19,7 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "APNA BAITHAK — Pure Veg Restaurant | Eldeco City, Lucknow",
   description:
-    "Apna Baithak Pure Vegetarian Restaurant — North Indian, Chinese, Chaap, Momos, Rolls, Main Course & more. Fresh taste, family-friendly. Order on 8299751213.",
+    "Apna Baithak Pure Vegetarian Restaurant — North Indian, Chinese, Chaap, Momos, Rolls, Main Course & more. Fresh taste, family-friendly. Order on 9454999442.",
   icons: {
     icon: "/logo-neon.svg",
     shortcut: "/logo-neon.svg",

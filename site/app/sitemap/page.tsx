@@ -51,7 +51,7 @@ const map = [
     children: [
       { label: "About — 90+ dishes", url: "/#about" },
       { label: "Gallery — 10 images", url: "/#gallery" },
-      { label: "Contact — 8299751213, Maps", url: "/#contact" },
+      { label: "Contact — 9454999442, Maps", url: "/#contact" },
       { label: "Sitemap — this page", url: "/sitemap" },
     ],
   },
