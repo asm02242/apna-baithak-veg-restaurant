@@ -26,11 +26,22 @@ type MenuItem = {
 };
 
 const FALLBACK: (MenuItem & { badge?: string; highlight?: string })[] = [
-  { id: "combos-mini-combo", name: "Mini Combo", category: "Combos", categoryId: "combos", price: 149, rating: 4.5, veg: true, image: "/images/foods/mini-combo.jpg", description: "1 Main Dish + 2 Roti + Rice + Salad", badge: "Solo • Light", highlight: "Perfect for one" },
-  { id: "combos-family-combo", name: "Family Combo", category: "Combos", categoryId: "combos", price: 399, rating: 4.7, veg: true, bestSeller: true, image: "/images/foods/family-combo.jpg", description: "2 Main Dishes + 4 Roti + Rice + Dal + Salad + Raita", badge: "Bestseller • 2-3 pax", highlight: "Most ordered" },
-  { id: "combos-party-combo", name: "Party Combo", category: "Combos", categoryId: "combos", price: 599, rating: 4.8, veg: true, image: "/images/foods/party-combo.jpg", description: "3 Main Dishes + 6 Roti + 2 Rice + Dal + 2 Salad + Raita + Sweet", badge: "Party • 4-6 pax", highlight: "Feast mode" },
-  { id: "thali-special-thali", name: "Baithak Combo", category: "Thali", categoryId: "thali", price: 299, rating: 4.8, veg: true, bestSeller: true, image: "/images/foods/special-thali.jpg", description: "Paneer/Mushroom + Daal Fry/Makhni + 2 Butter Roti + Laccha + Salad + Raita + Rasgulla", badge: "Thali Special", highlight: "Baithak signature" },
+  { id: "combos-mini-combo", name: "Mini Combo", category: "Combos", categoryId: "combos", price: 149, half: 89, full: 149, rating: 4.5, veg: true, image: "/images/foods/mini-combo.jpg", description: "1 Main Dish + 2 Roti + Rice + Salad", badge: "Solo • Light", highlight: "Perfect for one", isAvailable: true },
+  { id: "combos-family-combo", name: "Family Combo", category: "Combos", categoryId: "combos", price: 399, half: 229, full: 399, rating: 4.7, veg: true, bestSeller: true, image: "/images/foods/family-combo.jpg", description: "2 Main Dishes + 4 Roti + Rice + Dal + Salad + Raita", badge: "Bestseller • 2-3 pax", highlight: "Most ordered", isAvailable: true },
+  { id: "combos-party-combo", name: "Party Combo", category: "Combos", categoryId: "combos", price: 599, half: 329, full: 599, rating: 4.8, veg: true, image: "/images/foods/party-combo.jpg", description: "3 Main Dishes + 6 Roti + 2 Rice + Dal + 2 Salad + Raita + Sweet", badge: "Party • 4-6 pax", highlight: "Feast mode", isAvailable: true },
+  { id: "thali-special-thali", name: "Baithak Combo", category: "Thali", categoryId: "thali", price: 299, half: 179, full: 299, rating: 4.8, veg: true, bestSeller: true, image: "/images/foods/special-thali.jpg", description: "Paneer/Mushroom + Daal Fry/Makhni + 2 Butter Roti + Laccha + Salad + Raita + Rasgulla", badge: "Thali Special", highlight: "Baithak signature", isAvailable: true },
 ];
+
+function getImage(it: MenuItem) {
+  if (it.image) return `${it.image}?v=${Date.now()}`;
+  const n = it.name.toLowerCase();
+  if (n.includes("mini")) return `/images/foods/mini-combo.jpg?v=${Date.now()}`;
+  if (n.includes("family")) return `/images/foods/family-combo.jpg?v=${Date.now()}`;
+  if (n.includes("party")) return `/images/foods/party-combo.jpg?v=${Date.now()}`;
+  if (n.includes("baithak") || n.includes("special thali")) return `/images/foods/special-thali.jpg?v=${Date.now()}`;
+  if (n.includes("thali")) return `/images/foods/thali.jpg?v=${Date.now()}`;
+  return `/images/foods/family-combo.jpg?v=${Date.now()}`;
+}
 
 export default function CombosPage() {
   const { cart, addToCart, increase, decrease } = useCart();
@@ -48,22 +59,36 @@ export default function CombosPage() {
         const comboCat = cats.find((c) => c.id === "combos");
         const thaliCat = cats.find((c) => c.id === "thali");
         const items: (MenuItem & { badge?: string; highlight?: string })[] = [];
-        if (comboCat?.items?.length) {
-          for (const it of comboCat.items) {
-            const name = (it.name as string) || "";
-            let badge = "Combo";
-            let highlight = "Combo deal";
-            if (/mini/i.test(name)) { badge = "Solo • Light"; highlight = "Perfect for one"; }
-            else if (/family/i.test(name)) { badge = "Bestseller • 2-3 pax"; highlight = "Most ordered"; }
-            else if (/party/i.test(name)) { badge = "Party • 4-6 pax"; highlight = "Feast mode"; }
-            items.push({ ...it, badge, highlight });
-          }
+if (comboCat?.items?.length) {
+        for (const it of comboCat.items) {
+          const name = (it.name as string) || "";
+          let badge = "Combo";
+          let highlight = "Combo deal";
+          if (/mini/i.test(name)) { badge = "Solo • Light"; highlight = "Perfect for one"; }
+          else if (/family/i.test(name)) { badge = "Bestseller • 2-3 pax"; highlight = "Most ordered"; }
+          else if (/party/i.test(name)) { badge = "Party • 4-6 pax"; highlight = "Feast mode"; }
+          items.push({ 
+            ...it, 
+            badge, 
+            highlight,
+            half: it.half ?? (it.price ? it.price / 2 : undefined),
+            full: it.full ?? it.price,
+          });
         }
-        // Baithak Combo = Special Thali or any thali "special"
-        const special = thaliCat?.items?.find((x: any) => /special/i.test(x.name)) || cats.flatMap((c: any) => c.items).find((x: any) => /special.*thali|baithak/i.test(x.name));
-        if (special) {
-          items.push({ ...special, id: special.id, name: /Baithak|Special/i.test(special.name) ? special.name : "Baithak Combo", badge: "Thali Special", highlight: "Baithak signature" });
-        }
+      }
+// Baithak Combo = Special Thali or any thali "special"
+      const special = thaliCat?.items?.find((x: any) => /special/i.test(x.name)) || cats.flatMap((c: any) => c.items).find((x: any) => /special.*thali|baithak/i.test(x.name));
+      if (special) {
+        items.push({ 
+          ...special, 
+          id: special.id, 
+          name: /Baithak|Special/i.test(special.name) ? special.name : "Baithak Combo", 
+          badge: "Thali Special", 
+          highlight: "Baithak signature",
+          half: special.half ?? (special.price ? special.price / 2 : undefined),
+          full: special.full ?? special.price,
+        });
+      }
         // Ensure unique and 4 cards
         const uniq = Array.from(new Map(items.map((x) => [x.id, x])).values());
         let final = uniq.length ? uniq.slice(0, 4) : FALLBACK;
@@ -151,7 +176,20 @@ export default function CombosPage() {
                       <div className="mt-1 text-[16px] font-black leading-tight text-[#1c0a00]">{it.name}</div>
                       <div className="mt-1 line-clamp-2 text-xs leading-5 text-black/60">{it.description}</div>
                       <div className="mt-3 flex items-center justify-between">
-                        <div className="text-[20px] font-black text-[#1c0a00]">₹{it.price}</div>
+                        {it.half && it.full && it.half !== it.full ? (
+                          <div className="flex items-center gap-2">
+                            <div className="rounded-2xl border bg-[#fff7ed] p-1.5">
+                              <div className="text-center text-xs font-bold">Half</div>
+                              <div className="text-center text-sm font-extrabold text-[#ea580c]">₹{it.half}</div>
+                            </div>
+                            <div className="rounded-2xl border bg-white p-1.5">
+                              <div className="text-center text-xs font-bold">Full</div>
+                              <div className="text-center text-sm font-extrabold text-[#ea580c]">₹{it.full}</div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-[20px] font-black text-[#1c0a00]">₹{it.price}</div>
+                        )}
                         {active && <span className="rounded-full bg-[#16a34a]/10 border border-[#16a34a]/20 px-2 py-1 text-[11px] font-black text-[#16a34a]">In cart • {entry?.quantity}</span>}
                       </div>
                       <div className="mt-3 grid grid-cols-2 gap-2">

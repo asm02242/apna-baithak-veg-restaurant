@@ -24,7 +24,7 @@ export default function CartDrawer() {
     tip,
     setTip,
     deliveryType,
-  } = useCart();
+  unavailableItems } = useCart();
   const [showBill, setShowBill] = useState(true);
   const [coupon, setCoupon] = useState("");
   const [couponMsg, setCouponMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
@@ -111,6 +111,21 @@ export default function CartDrawer() {
                 <div className="mt-1.5 text-[11px] text-black/55">Shop for ₹{FREE_DELIVERY_THRESHOLD} to save ₹40 delivery fee</div>
               </>
             )}
+          </div>
+        )}
+
+        {/* Unavailable items warning */}
+        {mounted && unavailableItems.length > 0 && (
+          <div className="mx-3 mt-3 rounded-2xl bg-[#fef2f2] border border-red-200 px-3.5 py-3 shadow-sm">
+            <div className="flex items-center gap-2.5">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-red-500 text-white text-sm">⚠</span>
+              <div>
+                <div className="text-xs font-black text-red-600">Some items are no longer available</div>
+                <div className="text-[11px] text-red-500">
+                  {unavailableItems.map((it) => it.name).join(", ")} — please remove or wait for restock
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

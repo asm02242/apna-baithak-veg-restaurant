@@ -4,14 +4,26 @@ import { useCart } from "../../context/CartContext";
 import type { MenuItem } from "@/data/menu";
 
 const fallbackCombos: (MenuItem & { badge?: string })[] = [
-  { id: "combos-mini-combo", name: "Mini Combo", category: "Combos", categoryId: "combos", price: 149, rating: 4.5, veg: true, image: "/images/foods/mini-combo.jpg", description: "1 Main Dish + 2 Roti + Rice + Salad", badge: "Solo" },
-  { id: "combos-family-combo", name: "Family Combo", category: "Combos", categoryId: "combos", price: 399, rating: 4.7, veg: true, bestSeller: true, image: "/images/foods/family-combo.jpg", description: "2 Main Dishes + 4 Roti + Rice + Dal + Salad + Raita", badge: "Bestseller" },
-  { id: "combos-party-combo", name: "Party Combo", category: "Combos", categoryId: "combos", price: 599, rating: 4.8, veg: true, image: "/images/foods/party-combo.jpg", description: "3 Main Dishes + 6 Roti + 2 Rice + Dal + 2 Salad + Raita + Sweet", badge: "Party" },
-  { id: "thali-special-thali", name: "Baithak Special Thali", category: "Thali", categoryId: "thali", price: 299, rating: 4.8, veg: true, bestSeller: true, image: "/images/foods/special-thali.jpg", description: "Paneer/Mushroom + Daal Fry/Makhni + 2 Butter Roti + Laccha Paratha + Salad + Raita + Rasgulla", badge: "Thali Special" },
+  { id: "combos-mini-combo", name: "Mini Combo", category: "Combos", categoryId: "combos", price: 149, half: 89, full: 149, rating: 4.5, veg: true, image: "/images/foods/mini-combo.jpg", description: "1 Main Dish + 2 Roti + Rice + Salad", badge: "Solo", isAvailable: true },
+  { id: "combos-family-combo", name: "Family Combo", category: "Combos", categoryId: "combos", price: 399, half: 229, full: 399, rating: 4.7, veg: true, bestSeller: true, image: "/images/foods/family-combo.jpg", description: "2 Main Dishes + 4 Roti + Rice + Dal + Salad + Raita", badge: "Bestseller", isAvailable: true },
+  { id: "combos-party-combo", name: "Party Combo", category: "Combos", categoryId: "combos", price: 599, half: 329, full: 599, rating: 4.8, veg: true, image: "/images/foods/party-combo.jpg", description: "3 Main Dishes + 6 Roti + 2 Rice + Dal + 2 Salad + Raita + Sweet", badge: "Party", isAvailable: true },
+  { id: "thali-special-thali", name: "Baithak Special Thali", category: "Thali", categoryId: "thali", price: 299, half: 179, full: 299, rating: 4.8, veg: true, bestSeller: true, image: "/images/foods/special-thali.jpg", description: "Paneer/Mushroom + Daal Fry/Makhni + 2 Butter Roti + Laccha Paratha + Salad + Raita + Rasgulla", badge: "Thali Special", isAvailable: true },
 ];
 
 function getImage(it: MenuItem) {
-  return it.image || "/images/foods/family-combo.jpg";
+  if (it.image) return `${it.image}?v=${Date.now()}`;
+  // Use category-specific combo images, not gallery images
+  if (it.category === "Combos" || it.categoryId === "combos") {
+    const n = it.name.toLowerCase();
+    if (n.includes("mini")) return `/images/foods/mini-combo.jpg?v=${Date.now()}`;
+    if (n.includes("family")) return `/images/foods/family-combo.jpg?v=${Date.now()}`;
+    if (n.includes("party")) return `/images/foods/party-combo.jpg?v=${Date.now()}`;
+    return `/images/foods/family-combo.jpg?v=${Date.now()}`;
+  }
+  if (it.category === "Thali" || it.categoryId === "thali") {
+    return `/images/foods/special-thali.jpg?v=${Date.now()}`;
+  }
+  return `/images/foods/family-combo.jpg?v=${Date.now()}`;
 }
 
 export default function CombosHome() {
@@ -33,13 +45,24 @@ export default function CombosHome() {
           if (/mini/i.test(name)) badge = "Solo";
           else if (/family/i.test(name)) badge = "Bestseller";
           else if (/party/i.test(name)) badge = "Party";
-          items.push({ ...it, badge });
+          items.push({ 
+            ...it, 
+            badge,
+            half: it.half ?? it.price / 2,
+            full: it.full ?? it.price,
+          });
         }
       }
       // Add Baithak Combo: use Special Thali as 4th card if available, else fallback
       const special = thaliCat?.items?.find((x: any) => /special/i.test(x.name)) || cats.flatMap((c) => c.items).find((x: any) => /special.*thali/i.test(x.name));
       if (special) {
-        items.push({ ...special, badge: "Thali Special", name: special.name.includes("Thali") ? special.name : "Baithak Special Thali" });
+        items.push({ 
+          ...special, 
+          badge: "Thali Special", 
+          name: special.name.includes("Thali") ? special.name : "Baithak Special Thali",
+          half: special.half ?? special.price / 2,
+          full: special.full ?? special.price,
+        });
       }
       // Ensure 4 cards; pad with fallback if needed, slice to 4
       let final = items.length >= 4 ? items.slice(0, 4) : [...items, ...fallbackCombos.filter((f) => !items.find((x) => x.id === f.id))].slice(0, 4);
@@ -96,7 +119,20 @@ export default function CombosHome() {
                 <div className="mt-1 text-[16px] font-black leading-tight text-[#1c0a00] line-clamp-1">{it.name}</div>
                 <div className="mt-1 line-clamp-2 text-xs leading-5 text-black/60">{it.description || "Fresh • Hot • Pure Veg"}</div>
                 <div className="mt-3 flex items-center justify-between gap-3">
-                  <div className="text-[20px] font-black text-[#1c0a00]">₹{it.price}</div>
+                  {it.half && it.full && it.half !== it.full ? (
+                    <div className="flex items-center gap-2">
+                      <div className="rounded-2xl border bg-[#fff7ed] p-1.5">
+                        <div className="text-center text-xs font-bold">Half</div>
+                        <div className="text-center text-sm font-extrabold text-[#ea580c]">₹{it.half}</div>
+                      </div>
+                      <div className="rounded-2xl border bg-white p-1.5">
+                        <div className="text-center text-xs font-bold">Full</div>
+                        <div className="text-center text-sm font-extrabold text-[#ea580c]">₹{it.full}</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-[20px] font-black text-[#1c0a00]">₹{it.price}</div>
+                  )}
                   {!isAvailable ? (
                     <div className="rounded-full bg-gray-100 py-2 text-center text-xs font-black text-black/50 border">Unavailable</div>
                   ) : !entry ? (
