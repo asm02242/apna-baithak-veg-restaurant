@@ -233,18 +233,46 @@ export default function AdminPage(){
           </div>
           <div className="flex gap-3 border-t border-black/5 bg-gray-50 px-6 py-4"><button onClick={()=>setIsModalOpen(false)} className="flex-1 rounded-xl bg-white px-5 py-3 text-sm font-black ring-1 ring-black/10 hover:bg-gray-100">Cancel</button><button onClick={handleSave} disabled={saving} className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[#ea580c] px-5 py-3 text-sm font-black text-white shadow hover:bg-[#c2410c] disabled:opacity-60"><Icon.Check className="h-4 w-4"/>{saving?'Saving...': editing?'Save Changes':'Add Dish'}</button></div>
         </div></div>
+      {/* View/Detail Modal */}
+      {isModalOpen && viewing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"><div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={()=>{setIsModalOpen(false); setViewing(null);}}/><div className="relative w-full max-w-[560px] max-h-[90vh] overflow-hidden rounded-[26px] bg-white shadow-2xl animate-pop flex flex-col"><div className="flex items-center justify-between border-b border-black/5 px-6 py-5"><div><h3 className="font-black text-lg leading-none">View Dish</h3><p className="mt-1 text-xs font-medium text-black/50">View dish details</p></div><button onClick={()=>{setIsModalOpen(false); setViewing(null);}} className="grid h-10 w-10 place-items-center rounded-full bg-gray-50 ring-1 ring-black/5 hover:bg-black hover:text-white transition"><Icon.X className="h-5 w-5"/></button></div>
+          <div className="overflow-y-auto p-6 space-y-4">
+            <div className="flex gap-4 rounded-2xl bg-[#fff7ed] p-4 ring-1 ring-orange-100"><img src={viewing.image||`https://picsum.photos/seed/${encodeURIComponent(viewing.title||'preview')}/200/200`} alt="preview" className="h-20 w-20 rounded-xl object-cover ring-1 ring-black/5 bg-white" onError={e=>((e.target as HTMLImageElement).src=`https://picsum.photos/seed/preview/200/200`)}/><div className="min-w-0"><div className="font-black leading-tight">{viewing.title||'Dish Title'}</div><div className="text-xs font-bold text-black/50">{viewing.category}</div><div className="mt-1 text-sm font-black">{viewing.priceHalf?`Half ₹${viewing.priceHalf} • `:''}Full ₹{viewing.priceFull||0}</div><span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[11px] font-black ring-1 ${viewing.isAvailable?'bg-emerald-500 text-white ring-emerald-600':'bg-white text-black/50 ring-black/10'}`}>{viewing.isAvailable?'Available':'Unavailable'}</span></div></div>
+            <div><label className="text-xs font-black tracking-widest text-black/60">TITLE / FOOD NAME</label><input value={viewing.title} readOnly className="mt-1.5 h-11 w-full rounded-xl border bg-gray-50 px-4 text-sm font-semibold outline-none" /></div>
+            <div><label className="text-xs font-black tracking-widest text-black/60">CATEGORY</label><input value={viewing.category} readOnly className="mt-1.5 h-11 w-full rounded-xl border border-black/10 bg-gray-50 px-4 text-sm font-bold outline-none" /></div>
+            <div>
+              <div className="flex items-center justify-between"><label className="text-xs font-black tracking-widest text-black/60">PRICE MODE</label><span className="text-xs font-bold text-black/40">{viewing.priceHalf>0?'Half & Full':'Single Price'}</span></div>
+              <div className="mt-2 grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-1">
+                <span className={`rounded-lg py-2 text-sm font-black transition ${viewing.priceHalf>0?'bg-[#ea580c] text-white shadow':'text-black/60'}`}>Half & Full</span>
+                <span className="rounded-lg py-2 text-sm font-black transition">Single Price</span>
+              </div>
+            </div>
+            {viewing.priceHalf>0 ? (
+              <div className="grid grid-cols-2 gap-3"><div><label className="text-xs font-black tracking-widest text-black/60">MRP HALF (₹)</label><input type="number" min={0} value={viewing.priceHalf} readOnly className="mt-1.5 h-11 w-full rounded-xl border bg-gray-50 px-4 text-sm font-bold outline-none"/></div><div><label className="text-xs font-black tracking-widest text-black/60">MRP FULL (₹)</label><input type="number" min={0} value={viewing.priceFull} readOnly className="mt-1.5 h-11 w-full rounded-xl border bg-gray-50 px-4 text-sm font-bold outline-none"/></div></div>
+            ) : (
+              <div><label className="text-xs font-black tracking-widest text-black/60">PRICE (₹)</label><input type="number" min={0} value={viewing.priceFull} readOnly className="mt-1.5 h-11 w-full rounded-xl border bg-gray-50 px-4 text-sm font-bold outline-none"/></div>
+            )}
+            <div>
+              <label className="text-xs font-black tracking-widest text-black/60">PHOTO</label>
+              <div className="mt-1.5 relative rounded-xl border-2 border-dashed bg-white p-4">
+                <div className="pointer-events-none flex items-center gap-3">
+                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#fff7ed] text-[#ea580c] ring-1 ring-orange-100"><Icon.Upload className="h-5 w-5"/></div>
+                  <div className="flex-1"><div className="text-sm font-black">{viewing.image?'Current image':'No image'}</div><div className="text-xs text-black/50">Image URL: {viewing.image||'none'}</div></div>
+                </div>
+                <input value={viewing.image} readOnly placeholder="Image URL" className="mt-2 h-11 w-full rounded-xl border bg-gray-50 px-4 text-sm font-medium outline-none" />
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-black/5"><div><div className="text-sm font-black">Available for ordering</div><div className="text-xs text-black/50">Toggle off to hide without deleting</div></div><label className="relative inline-flex cursor-pointer items-center"><input type="checkbox" checked={viewing.isAvailable} readOnly className="peer sr-only"/><div className="peer h-7 w-12 rounded-full bg-gray-300 peer-checked:bg-emerald-500 after:absolute after:left-[2px] after:top-[2px] after:h-6 after:w-6 after:rounded-full after:bg-white after:shadow after:transition-all peer-checked:after:translate-x-5"/></label></div>
+          </div>
+          <div className="flex gap-3 border-t border-black/5 bg-gray-50 px-6 py-4"><button onClick={()=>{setIsModalOpen(false); setViewing(null);}} className="flex-1 rounded-xl bg-white px-5 py-3 text-sm font-black ring-1 ring-black/10 hover:bg-gray-100">Close</button></div>
+        </div></div>
       )}
+
       {toast && <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full bg-black px-5 py-3 text-sm font-bold text-white shadow-2xl flex items-center gap-2"><span className="grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-white">✓</span>{toast}</div>}
       <style>{`@keyframes pop{0%{transform:scale(.96);opacity:0}100%{transform:scale(1);opacity:1}}.animate-pop{animation:pop .18s ease-out}`}</style>
     </div>
   );
 }
-<Icon.Check className="h-4 w-4"/>{saving?'Saving...': editing?'Save Changes':'Add Dish'}</button></div>
-        </div></div>
-      )}
-
-      {/* View/Detail Modal */}
-      {isModalOpen && viewing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"><div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={()=>{setIsModalOpen(false); setViewing(null);}}/><div className="relative w-full max-w-[560px] max-h-[90vh] overflow-hidden rounded-[26px] bg-white shadow-2xl animate-pop flex flex-col"><div className="flex items-center justify-between border-b border-black/5 px-6 py-5"><div><h3 className="font-black text-lg leading-none">View Dish</h3><p className="mt-1 text-xs font-medium text-black/50">View dish details</p></div><button onClick={()=>{setIsModalOpen(false); setViewing(null);}} className="grid h-10 w-10 place-items-center rounded-full bg-gray-50 ring-1 ring-black/5 hover:bg-black hover:text-white transition"><Icon.X className="h-5 w-5"/></button></div>
           <div className="overflow-y-auto p-6 space-y-4">
             <div className="flex gap-4 rounded-2xl bg-[#fff7ed] p-4 ring-1 ring-orange-100"><img src={viewing.image||`https://picsum.photos/seed/${encodeURIComponent(viewing.title||'preview')}/200/200`} alt="preview" className="h-20 w-20 rounded-xl object-cover ring-1 ring-black/5 bg-white" onError={e=>((e.target as HTMLImageElement).src=`https://picsum.photos/seed/preview/200/200`)}/><div className="min-w-0"><div className="font-black leading-tight">{viewing.title||'Dish Title'}</div><div className="text-xs font-bold text-black/50">{viewing.category}</div><div className="mt-1 text-sm font-black">{viewing.priceHalf?`Half ₹${viewing.priceHalf} • `:''}Full ₹{viewing.priceFull||0}</div><span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[11px] font-black ring-1 ${viewing.isAvailable?'bg-emerald-500 text-white ring-emerald-600':'bg-white text-black/50 ring-black/10'}`}>{viewing.isAvailable?'Available':'Unavailable'}</span></div></div>
