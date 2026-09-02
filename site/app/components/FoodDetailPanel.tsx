@@ -1,17 +1,6 @@
 "use client";
 import { useDetail } from "../context/DetailContext";
 import { useCart } from "../context/CartContext";
-import { allItems } from "@/data/menu";
-
-function getDescription(name: string, category: string) {
-  const n = name.toLowerCase();
-  if (n.includes("chaap")) return `Smoky tandoor-roasted ${name} — marinated overnight, creamy & chatpata. Served hot with mint chutney. 100% pure veg, freshly prepared at Apna Baithak.`;
-  if (n.includes("momos")) return `Juicy steamed ${name} with spicy red chutney & mayo. Soft outside, flavourful veg filling inside. Made fresh daily.`;
-  if (n.includes("noodles") || n.includes("fried rice")) return `Wok-tossed ${name} with crunchy veggies, garlic & secret Schezwan sauce. Half & Full portions.`;
-  if (n.includes("burger") || n.includes("sandwich")) return `Crispy patty, fresh bun, cheese & veggies — ${name} is our quick snack favourite.`;
-  if (n.includes("coffee") || n.includes("lassi")) return `Chilled ${name} — refreshing, sweet & creamy. Perfect with any meal.`;
-  return `Signature ${name} from ${category} — pure veg, generous portion, freshly prepared. Loved by families at Eldeco City.`;
-}
 
 const mockReviews = [
   { name: "Aman S.", rating: 5, text: "Taste is amazing, delivery on time. Will order again!", ago: "2 days ago" },
@@ -31,8 +20,7 @@ export default function FoodDetailPanel() {
   const halfInCart = cart.find((c) => c.id === halfId);
   const fullInCart = cart.find((c) => c.id === fullId);
   const singleInCart = cart.find((c) => c.id === item.id);
-  const desc = getDescription(item.name, item.category);
-  const related = allItems.filter((i) => i.categoryId === item.categoryId && i.id !== item.id).slice(0, 4);
+  const related = []; // Will be populated from API if needed
 
   return (
     <div className="fixed inset-0 z-50">
@@ -48,7 +36,7 @@ export default function FoodDetailPanel() {
           {/* Image */}
           <div className="relative h-[220px] bg-white overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+            <img src={`${item.image}?v=${Date.now()}`} alt={item.name} className="h-full w-full object-cover" />
             <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[10px] font-black shadow">
               <span className="h-3 w-3 rounded-[3px] border border-[#16a34a] grid place-items-center"><span className="h-1.5 w-1.5 rounded-full bg-[#16a34a]" /></span> PURE VEG
             </span>
@@ -115,7 +103,7 @@ export default function FoodDetailPanel() {
             {/* Description */}
             <div className="rounded-xl bg-white p-3 ring-1 ring-black/5">
               <div className="text-xs font-black">Description</div>
-              <p className="mt-1 text-xs leading-5 text-black/70">{desc}</p>
+              <p className="mt-1 text-xs leading-5 text-black/70">{item.description || "Signature dish from our kitchen — pure veg, generous portion, freshly prepared."}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 <span className="rounded-full bg-[#fff7ed] px-2 py-1 text-[10px] font-bold">Pure Veg</span>
                 <span className="rounded-full bg-[#fff7ed] px-2 py-1 text-[10px] font-bold">Fresh</span>
@@ -154,7 +142,7 @@ export default function FoodDetailPanel() {
                   const hasVariant = it.half !== undefined && it.full !== undefined && it.half > 0 && it.full > 0;
                   return (
                     <button key={it.id} onClick={() => openDetail(it)} className="text-left rounded-xl border bg-white p-2 hover:bg-[#fff7ed]">
-                      <img src={it.image} alt={it.name} className="h-20 w-full object-cover rounded-lg" />
+                      <img src={`${it.image}?v=${Date.now()}`} alt={it.name} className="h-20 w-full object-cover rounded-lg" />
                       <div className="mt-1 line-clamp-1 text-xs font-bold">{it.name}</div>
                       <div className="text-xs font-black text-[#ea580c]">
                         {hasVariant ? `Half ₹${it.half} • Full ₹${it.full}` : `₹${it.price}`}

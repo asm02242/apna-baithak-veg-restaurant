@@ -7,7 +7,7 @@ import type { MenuItem } from "@/data/menu";
 import { bestSellers as staticBest } from "@/data/menu";
 
 function getImage(item: MenuItem) {
-  if (item.image) return item.image;
+  if (item.image) return `${item.image}?v=${Date.now()}`;
   const n = item.name.toLowerCase();
   if (n.includes("paneer") || n.includes("shahi") || n.includes("rogan josh") || n.includes("kadai")) return "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400&h=300&fit=crop";
   if (n.includes("chaap")) return "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400&h=300&fit=crop";
